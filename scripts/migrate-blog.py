@@ -2,6 +2,10 @@
 """
 Script to migrate blog posts from Java Adventure Blogspot to Hugo markdown files.
 Scrapes the blog and creates properly formatted Hugo posts.
+
+Usage:
+    uv pip install -r requirements.txt
+    python3 scripts/migrate-blog.py
 """
 
 import re
