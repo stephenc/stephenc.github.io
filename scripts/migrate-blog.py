@@ -46,64 +46,149 @@ def extract_posts_from_page(soup):
     """Extract blog posts from a single page."""
     posts = []
     
-    # Find post containers - adjust selector based on actual HTML structure
-    post_containers = soup.find_all('div', class_='post')
+    # Debug: Print some HTML structure to understand the page
+    print("Looking for post containers...")
+    
+    # Blogspot uses different selectors - try multiple approaches
+    selectors_to_try = [
+        'div.post',
+        'div[class*="post"]',
+        'article',
+        'div.blog-post',
+        'div.hentry',
+        'div.entry',
+        '.post-outer',
+        '.blog-posts .post'
+    ]
+    
+    post_containers = []
+    for selector in selectors_to_try:
+        containers = soup.select(selector)
+        if containers:
+            print(f"Found {len(containers)} containers with selector: {selector}")
+            post_containers = containers
+            break
+    
     if not post_containers:
-        # Try alternative selectors
-        post_containers = soup.find_all('article')
-        if not post_containers:
-            post_containers = soup.find_all('div', class_='blog-post')
+        # Fallback: look for any div containing h1, h2, or h3 with links
+        print("Trying fallback approach...")
+        all_headers = soup.find_all(['h1', 'h2', 'h3'])
+        for header in all_headers:
+            link = header.find('a')
+            if link and 'blogspot.com' in link.get('href', ''):
+                post_containers.append(header.parent)
+        print(f"Found {len(post_containers)} posts via fallback")
     
     for container in post_containers:
         try:
-            # Extract title
-            title_elem = container.find('h1') or container.find('h2') or container.find('h3')
+            # Extract title - look for header with link
+            title_elem = None
+            for header_tag in ['h1', 'h2', 'h3']:
+                header = container.find(header_tag)
+                if header:
+                    link = header.find('a')
+                    if link:
+                        title_elem = header
+                        break
+            
             if not title_elem:
                 continue
                 
             title = title_elem.get_text().strip()
+            print(f"Found post: {title}")
             
-            # Extract date
-            date_elem = container.find('time') or container.find(class_=re.compile('date|time'))
+            # Extract date - look for various date patterns
             date_str = "2006-01-01"  # Default
             
-            if date_elem:
-                date_text = date_elem.get_text()
-                # Parse various date formats
-                date_match = re.search(r'(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})', date_text)
-                if date_match:
-                    day = date_match.group(1).zfill(2)
-                    month_name = date_match.group(2)
-                    year = date_match.group(3)
-                    
-                    month_names = {
-                        'January': '01', 'February': '02', 'March': '03', 'April': '04',
-                        'May': '05', 'June': '06', 'July': '07', 'August': '08',
-                        'September': '09', 'October': '10', 'November': '11', 'December': '12',
-                        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
-                        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
-                        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
-                    }
-                    month = month_names.get(month_name, '01')
-                    date_str = f"{year}-{month}-{day}"
+            # Look for date in various places
+            date_text = container.get_text()
+            date_patterns = [
+                r'Posted.*?(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})',
+                r'(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})',
+                r'(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?\s*,?\s*(\d{4})',
+                r'/(\d{4})/(\d{2})/[^/]+\.html'  # From URL
+            ]
             
-            # Extract content
-            content_elem = container.find('div', class_='post-body') or container
-            content = clean_content(content_elem)
+            for pattern in date_patterns:
+                date_match = re.search(pattern, date_text)
+                if date_match:
+                    if len(date_match.groups()) == 3:
+                        if pattern.endswith('html'):  # URL pattern
+                            year, month = date_match.group(1), date_match.group(2)
+                            day = "01"
+                        else:
+                            if date_match.group(1).isdigit():  # Day first
+                                day = date_match.group(1).zfill(2)
+                                month_name = date_match.group(2)
+                                year = date_match.group(3)
+                            else:  # Month first
+                                month_name = date_match.group(1)
+                                day = date_match.group(2).zfill(2)
+                                year = date_match.group(3)
+                            
+                            month_names = {
+                                'January': '01', 'February': '02', 'March': '03', 'April': '04',
+                                'May': '05', 'June': '06', 'July': '07', 'August': '08',
+                                'September': '09', 'October': '10', 'November': '11', 'December': '12',
+                                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                                'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                            }
+                            month = month_names.get(month_name, '01')
+                        
+                        date_str = f"{year}-{month}-{day}"
+                        break
+            
+            # Extract content - get the main text content
+            content = ""
+            
+            # Remove title and metadata from content
+            content_container = container
+            
+            # Try to find the main content area
+            content_elem = (container.find('div', class_='post-body') or 
+                          container.find('div', class_='entry-content') or
+                          container.find('div', class_='post-content') or
+                          container)
+            
+            if content_elem:
+                # Remove script, style, and navigation elements
+                for elem in content_elem(['script', 'style', 'nav', 'header', 'footer']):
+                    elem.decompose()
+                
+                # Get text and clean it up
+                content = content_elem.get_text()
+                
+                # Clean up the content
+                lines = content.split('\n')
+                cleaned_lines = []
+                for line in lines:
+                    line = line.strip()
+                    if line and not line.startswith('Posted') and 'Add a comment' not in line:
+                        cleaned_lines.append(line)
+                
+                content = '\n\n'.join(cleaned_lines)
             
             # Extract tags
             tags = []
-            labels_elem = container.find(class_=re.compile('label|tag'))
-            if labels_elem:
-                tag_links = labels_elem.find_all('a')
-                tags = [link.get_text().strip() for link in tag_links]
+            labels_text = container.get_text()
+            if 'Labels:' in labels_text:
+                labels_match = re.search(r'Labels:\s*([^\n]+)', labels_text)
+                if labels_match:
+                    # Simple extraction - just look for common tag names
+                    tag_text = labels_match.group(1)
+                    common_tags = ['Java', 'Maven', 'Jenkins', 'Shell', 'JavaEE', 'CloudBees']
+                    for tag in common_tags:
+                        if tag in tag_text:
+                            tags.append(tag)
             
-            posts.append({
-                'title': title,
-                'date': date_str,
-                'tags': tags,
-                'content': content
-            })
+            if title and content:
+                posts.append({
+                    'title': title,
+                    'date': date_str,
+                    'tags': tags,
+                    'content': content.strip()
+                })
             
         except Exception as e:
             print(f"Error processing post: {e}")
