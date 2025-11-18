@@ -48,5 +48,5 @@ theme = ["hugo-admonitions", "github-style"]
 
 [privacy]
   [privacy.googleAnalytics]
-    disable = false
+    disable = true
     respectDoNotTrack = false
