@@ -1,0 +1,25 @@
+baseURL = "https://stephenc.github.io/"
+languageCode = "en-gb"
+title = "stephenc"
+theme = "m10c"
+
+paginate = 10
+
+[params]
+  author = "stephenc"
+  description = "Notes on JVM, tooling, and platform engineering"
+  avatar = ""
+  menu_title = "stephenc"
+
+# Main menu entries
+[[menu.main]]
+  identifier = "blog"
+  name = "Blog"
+  url = "/"
+  weight = 1
+
+[[menu.main]]
+  identifier = "legacy"
+  name = "Legacy projects"
+  url = "/legacy/"
+  weight = 2
