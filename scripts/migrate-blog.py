@@ -56,11 +56,21 @@ def extract_posts_from_page(soup):
     
     # Look for all links that might be blog post links
     all_links = soup.find_all('a', href=True)
+    print(f"Total links found: {len(all_links)}")
+    
+    # Debug: Print first 10 links to see what we're working with
+    for i, link in enumerate(all_links[:10]):
+        href = link.get('href', '')
+        text = link.get_text().strip()
+        print(f"Link {i}: href='{href}' text='{text}'")
+    
     blog_post_links = []
     for link in all_links:
         href = link.get('href', '')
         if 'javaadventure.blogspot.com' in href and '/20' in href and '.html' in href:
             blog_post_links.append(link)
+        elif 'blogspot.com' in href and '.html' in href:
+            print(f"Potential blog link (not matching pattern): {href}")
     
     print(f"Found {len(blog_post_links)} potential blog post links")
     
@@ -91,6 +101,17 @@ def extract_posts_from_page(soup):
     if not post_containers:
         # Fallback: look for any element containing blog post links
         print("Trying fallback approach...")
+        
+        # Debug: Let's also try to find any h1, h2, h3 elements
+        all_headers = soup.find_all(['h1', 'h2', 'h3'])
+        print(f"Found {len(all_headers)} headers total")
+        
+        for i, header in enumerate(all_headers[:5]):  # Show first 5
+            print(f"Header {i}: {header.name} - '{header.get_text().strip()}'")
+            links_in_header = header.find_all('a', href=True)
+            for link in links_in_header:
+                print(f"  Link in header: {link.get('href', '')}")
+        
         for link in blog_post_links:
             # Find the parent container that likely contains the full post
             parent = link.parent
