@@ -80,6 +80,11 @@
     document.getElementById('cookie-details-modal').style.display = 'none';
   }
 
+  function resetCookieConsent() {
+    localStorage.removeItem('cookieConsent');
+    document.getElementById('cookie-consent-banner').style.display = 'block';
+  }
+
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
     var consent = getCookieConsent();

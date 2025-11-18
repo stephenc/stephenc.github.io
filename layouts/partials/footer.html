@@ -1,0 +1,8 @@
+<footer style="text-align: center; padding: 20px; border-top: 1px solid #eee; margin-top: 40px;">
+  <p style="margin: 0; color: #666; font-size: 14px;">
+    © {{ now.Year }} {{ .Site.Params.author }}
+    {{ if and (eq (getenv "HUGO_ENV") "production") .Site.Config.Services.GoogleAnalytics.ID }}
+    | <a href="#" onclick="resetCookieConsent(); return false;" style="color: #666; text-decoration: underline;">Cookie Settings</a>
+    {{ end }}
+  </p>
+</footer>
