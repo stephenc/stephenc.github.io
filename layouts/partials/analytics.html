@@ -1,4 +1,4 @@
-{{ if and (eq (getenv "HUGO_ENV") "production") .Site.GoogleAnalytics.ID }}
+{{ if and (eq (getenv "HUGO_ENV") "production") .Site.Services.GoogleAnalytics.ID }}
 <!-- Cookie Consent Banner -->
 <div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #333; color: white; padding: 15px; text-align: center; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.3);">
   <div style="max-width: 1200px; margin: 0 auto;">
@@ -45,7 +45,7 @@
     // Google tag (gtag.js)
     var script1 = document.createElement('script');
     script1.async = true;
-    script1.src = 'https://www.googletagmanager.com/gtag/js?id={{ .Site.GoogleAnalytics.ID }}';
+    script1.src = 'https://www.googletagmanager.com/gtag/js?id={{ .Site.Services.GoogleAnalytics.ID }}';
     document.head.appendChild(script1);
 
     var script2 = document.createElement('script');
@@ -53,7 +53,7 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', '{{ .Site.GoogleAnalytics.ID }}', {
+      gtag('config', '{{ .Site.Services.GoogleAnalytics.ID }}', {
         anonymize_ip: true,
         cookie_flags: 'SameSite=None;Secure'
       });
