@@ -41,3 +41,12 @@ theme = ["hugo-admonitions", "github-style"]
   name = "Legacy projects"
   url = "/legacy/"
   weight = 2
+
+[services]
+  [services.googleAnalytics]
+    id = 'G-CEQZZXVE7Q'
+
+[privacy]
+  [privacy.googleAnalytics]
+    disable = false
+    respectDoNotTrack = false
