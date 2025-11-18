@@ -1,0 +1,250 @@
+<!doctype html><html lang=en-gb><head><meta charset=utf-8><meta name=viewport content="width=device-width"><script type=application/javascript src=https://stephenc.github.io/js/theme-mode.js></script><link rel=stylesheet href=https://stephenc.github.io/css/frameworks.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github-style.css><link rel=stylesheet href=https://stephenc.github.io/css/light.css><link rel=stylesheet href=https://stephenc.github.io/css/dark.css><link rel=stylesheet href=https://stephenc.github.io/css/syntax.css><title>The costs of Java Utils Logging - Stephen's technical blog</title>
+<link rel=icon type=image/x-icon href=https://stephenc.github.io/images/favicon.ico><meta name=theme-color content="#1e2327"><meta name=description content="One of my colleagues had a question:
+Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.
+"><meta name=keywords content='blog'><meta name=robots content="noodp"><link rel=canonical href=https://stephenc.github.io/post/2016-12-05-costs-java-utils-logging/><meta name=twitter:card content="summary"><meta name=twitter:title content="The costs of Java Utils Logging - Stephen's technical blog"><meta name=twitter:description content="One of my colleagues had a question:
+Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.
+"><meta name=twitter:site content="https://stephenc.github.io/"><meta name=twitter:creator content><meta name=twitter:image content="https://stephenc.github.io/"><meta property="og:type" content="article"><meta property="og:title" content="The costs of Java Utils Logging - Stephen's technical blog"><meta property="og:description" content="One of my colleagues had a question:
+Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.
+"><meta property="og:url" content="https://stephenc.github.io/post/2016-12-05-costs-java-utils-logging/"><meta property="og:site_name" content="The costs of Java Utils Logging"><meta property="og:image" content="https://stephenc.github.io/"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><meta property="article:published_time" content="2016-12-05 00:00:00 +0000 UTC"></head><body><div style=position:relative><header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on"><div class="Header-item mobile-none" style=margin-top:-4px;margin-bottom:-4px><a class=Header-link href=https://stephenc.github.io/><img class=octicon height=32 width=32 src=/images/gitHub-mark-white.png></a></div><div class="Header-item d-md-none"><button class="Header-link btn-link js-details-target" type=button onclick='document.querySelector("#header-search").style.display=document.querySelector("#header-search").style.display=="none"?"block":"none"'><svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" width="24"><path fill-rule="evenodd" d="M1 2.75A.75.75.0 011.75 2h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 2.75zm0 5A.75.75.0 011.75 7h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 7.75zM1.75 12a.75.75.0 100 1.5h12.5a.75.75.0 100-1.5H1.75z"/></svg></button></div><div style=display:none id=header-search class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex"><div class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to"><div class=position-relative><form target=_blank id=search-form accept-charset=UTF-8 method=get autocomplete=off><label class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center"><input type=text class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable" name=q placeholder=Search autocomplete=off></label></form></div></div></div><div class="Header-item Header-item--full flex-justify-center d-md-none position-relative"><a class=Header-link href=https://stephenc.github.io/><img class="octicon octicon-mark-github v-align-middle" height=32 width=32 src=/images/gitHub-mark-white.png></a></div><div class=Header-item style=margin-right:0><a href=javascript:void(0) class="Header-link no-select" onclick=switchTheme()><svg style="fill:var(--color-profile-color-modes-toggle-moon)" class="no-select" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.52208 7.71754c3.05612.0 5.53362-2.47748 5.53362-5.5336C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961 9.95801 1.07727 10.3495.771159 10.6474.99992c1.4679 1.12724 2.4141 2.90007 2.4141 4.89391.0 3.40575-2.7609 6.16667-6.16665 6.16667-2.94151.0-5.40199-2.0595-6.018122-4.81523C.794841 6.87902 1.23668 6.65289 1.55321 6.85451 2.41106 7.40095 3.4296 7.71754 4.52208 7.71754z"/></svg></a></div></header></div><div id=search-result class="container-lg px-3 new-discussion-timeline" style=display:none></div><div class=application-main><div><main><div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4"><div class=px-0><div class="mb-3 d-flex px-3 px-md-3 px-lg-5"><div class="flex-auto min-width-0 width-fit mr-3"><div class=d-flex><div class="d-none d-md-block"><a class="avatar mr-2 flex-shrink-0" href=https://stephenc.github.io/><img class=avatar-user src=/images/avatar.jpg width=32 height=32></a></div><div class="d-flex flex-column"><h1 class="break-word f3 text-normal mb-md-0 mb-1"><span class=author><a href=https://stephenc.github.io/>stephenc</a>
+</span><span class=path-divider>/</span>
+<strong class="css-truncate css-truncate-target mr-1" style=max-width:410px><a href=https://stephenc.github.io/post/2016-12-05-costs-java-utils-logging/>The costs of Java Utils Logging</a></strong></h1><div class="note m-0">Created <relative-time datetime="Mon, 05 Dec 2016 00:00:00 +0000" class=no-wrap>Mon, 05 Dec 2016 00:00:00 +0000</relative-time>
+<span class=file-info-divider></span>
+Modified <relative-time datetime="Mon, 05 Dec 2016 00:00:00 +0000" class=no-wrap>Mon, 05 Dec 2016 00:00:00 +0000</relative-time></div></div></div></div></div></div></div><div class="container-lg px-3 new-discussion-timeline"><div class="repository-content gist-content"><div><div class="js-gist-file-update-container js-task-list-container file-box"><div id=file-pytest class="file my-2"><div id=post-header class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style=z-index:2><div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto"><div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0"><summary id=toc-toggle onclick=clickToc() class="btn btn-octicon m-0 mr-2 p-2"><svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered"><path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zM3 8A1 1 0 111 8a1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"/></svg></summary><details-menu class=SelectMenu id=toc-details style="display: none;"><div class="SelectMenu-modal rounded-3 mt-1" style=max-height:340px><div class="SelectMenu-list SelectMenu-list--borderless p-2" style=overscroll-behavior:contain id=toc-list></div></div></details-menu>1773 Words</div><div class="file-actions flex-order-2 pt-0"><a class="muted-link mr-3" href=/tags/java><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
+Java</a></div></div></div><div class="Box-body px-5 pb-5" style=z-index:1><article class="markdown-body entry-content container-lg"><p>One of my colleagues had a question:</p><p>Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.</p><p>Now while JUL is not a complete and utter steaming pile of excrement, at times it does indeed throw shades at being one.</p><p><strong>This post is not a defence of Java Utils Logging. This post is an analysis of how to use Java Utils Logging such that performance does not end up down the toilet.</strong></p><p>When you are using Java Utils Logging there are many many ways to actually log something:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// simple style</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>info</span>(<span style=color:#e6db74>&#34;A message&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// explicit level style</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>INFO</span>, <span style=color:#e6db74>&#34;A message&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// explicit level and stack trace</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>INFO</span>, <span style=color:#e6db74>&#34;A message with a stack trace&#34;</span>, e);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// explicit level and single parameter</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>INFO</span>, <span style=color:#e6db74>&#34;A message with a {0} parameter&#34;</span>, param);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// explicit level and multiple parameters</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>INFO</span>, <span style=color:#e6db74>&#34;A message with parameter {0} and {1}&#34;</span>, <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{param0,param1});
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// explicit level, stack trace and parameter(s)</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LogRecord lr <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LogRecord(Level.<span style=color:#a6e22e>INFO</span>, <span style=color:#e6db74>&#34;A message with parameter {0} and {1} and a stack trace&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>lr.<span style=color:#a6e22e>setThrown</span>(e);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>lr.<span style=color:#a6e22e>setParams</span>(<span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{param0,param1});
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>log</span>(lr);
+</span></span></code></pre></div><p>Now each of the above achieves basically the same thing, sending a message to the logs under differing use cases. The LOGGER.info() variant is intended to be used when you have a constant message to report&mldr; but invariably somebody starts doing the easy string concatenation with that style, rather than use the parameterised logging as the JUL framework intended, so you will sometimes see:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>info</span>(<span style=color:#e6db74>&#34;Accepted incoming connection #&#34;</span> <span style=color:#f92672>+</span> connectionNumber <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34; from &#34;</span> <span style=color:#f92672>+</span> socket.<span style=color:#a6e22e>getAddress</span>() <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34; and processing with &#34;</span> <span style=color:#f92672>+</span> handler); 
+</span></span></code></pre></div><p>Rather than</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>INFO</span>, <span style=color:#e6db74>&#34;Accepted incoming connection #{0} from {1} and processing with {2}&#34;</span>, <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{connectionNumber,socket.<span style=color:#a6e22e>getAddress</span>(),handler});
+</span></span></code></pre></div><p>At the INFO level (which is normally logged by default) this may not be as critical, but once we move the code from development to production and notch the levels down the difference can be an order of magnitude or more.</p><p>The reason becomes clear when we look at the source code for Logger:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Log a message, with no arguments.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &lt;p&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * If the logger is currently enabled for the given message
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * level then the given message is forwarded to all the
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * registered output Handler objects.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &lt;p&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * @param level One of the message level identifiers, e.g., SEVERE
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * @param msg The string message (or a key in the message catalog)
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>log</span>(Level level, String msg) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>isLoggable(level)) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    LogRecord lr <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LogRecord(level, msg);
+</span></span><span style=display:flex><span>    doLog(lr);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Log a message, with an array of object arguments.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &lt;p&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * If the logger is currently enabled for the given message
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * level then a corresponding LogRecord is created and forwarded
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * to all the registered output Handler objects.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &lt;p&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * @param level One of the message level identifiers, e.g., SEVERE
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * @param msg The string message (or a key in the message catalog)
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * @param params array of parameters to the message
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>log</span>(Level level, String msg, Object params<span style=color:#f92672>[]</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>isLoggable(level)) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    LogRecord lr <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LogRecord(level, msg);
+</span></span><span style=display:flex><span>    lr.<span style=color:#a6e22e>setParameters</span>(params);
+</span></span><span style=display:flex><span>    doLog(lr);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Log an INFO message.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &lt;p&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * If the logger is currently enabled for the INFO message
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * level then the given message is forwarded to all the
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * registered output Handler objects.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &lt;p&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * @param msg The string message (or a key in the message catalog)
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>info</span>(String msg) {
+</span></span><span style=display:flex><span>    log(Level.<span style=color:#a6e22e>INFO</span>, msg);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So that LOGGER.info() call requires that we build up the string first, and only after the string has been instantiated do we check if the logger is logging that level whereas the parameterised message just passes the string constant and the object array but doesn&rsquo;t do much actual work.</p><p>One would hope, given sufficient time, that the LOGGER.log(level,msg) call would also get inlined and the JVM might be smart enough to re-order the isLoggable check ahead of the string concatenation and everything would be equal <em>in the long run</em>.</p><p>Well, that&rsquo;s a nice theory, but users would need to wait for that to occur, plus your log statements are likely in the middle of large methods anyway and the Logger methods are not final so the JVM would need to put in some guards <em>just in case somebody loaded a Logger subclass that would invalidate the optimisation</em>.</p><p>So what is the impact anyway?</p><p>Enter <a href=http://openjdk.java.net/projects/code-tools/jmh/>JMH</a> we can run a micro-benchmark to see what the different styles perform like <strong>when our logger is not logging</strong>.</p><p>Firstly we need to grab a baseline:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JulBenchmark</span> {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> Logger LOGGER <span style=color:#f92672>=</span> Logger.<span style=color:#a6e22e>getLogger</span>(JulBenchmark.<span style=color:#a6e22e>class</span>.<span style=color:#a6e22e>getName</span>());
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>long</span> time;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>noLogging</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>        time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>blackholeStringConcat</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(<span style=color:#e6db74>&#34;Started at &#34;</span> <span style=color:#f92672>+</span> <span style=color:#66d9ef>new</span> Date(time));
+</span></span><span style=display:flex><span>        time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>blackholeStringFormat</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;Started at %tc&#34;</span>, time));
+</span></span><span style=display:flex><span>        time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>blackholeSimpleArray</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(<span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{time});
+</span></span><span style=display:flex><span>        time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>blackholeDateArray</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(<span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{<span style=color:#66d9ef>new</span> Date(time)});
+</span></span><span style=display:flex><span>        time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>        blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>In each of our benchmarks, we pass through the blackhole and we consume the time static field with it so that the time differences we observe are all just for the statements above the time++ and by incrementing the time value we prevent the JVM from optimising concatenation to a constant string value.</p><p>The results:</p><pre tabindex=0><code>Benchmark                                      Mode  Cnt          Score          Error  Units
+JulBenchmark.blackholeDateArray               thrpt   20   97371938.780 ±  2903787.552  ops/s
+JulBenchmark.blackholeSimpleArray             thrpt   20  100902747.726 ±  1383605.583  ops/s
+JulBenchmark.blackholeStringConcat            thrpt   20    3727524.654 ±    62280.481  ops/s
+JulBenchmark.blackholeStringFormat            thrpt   20     601454.586 ±     5689.042  ops/s
+JulBenchmark.noLogging                        thrpt   20  366202499.287 ± 13837552.431  ops/s
+</code></pre><p>So creating an Array just to throw it down the black hole is two orders of magnitude better than building a string to be thrown down the black hole which is an order of magnitude better than using String.format. It doesn&rsquo;t really matter whether our array creation even included wrapping the long as a Date.</p><p>Our alarm bells should be ringing rather loudly by now&mldr; that String concatenation is a horrific cost to pay and the array creation is really quite cheap compared to doing nothing.</p><p>Now let&rsquo;s look at what happens if we do some logging at a level that goes nowhere:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>helperStringConcat</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>fine</span>(<span style=color:#e6db74>&#34;Started at &#34;</span> <span style=color:#f92672>+</span> <span style=color:#66d9ef>new</span> Date(time));
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelStringConcat</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at &#34;</span> <span style=color:#f92672>+</span> <span style=color:#66d9ef>new</span> Date(time));
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelMessage1Arg_custom</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0,date,EEE MMM dd HH:mm:ss zzz yyyy}&#34;</span>, time);
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelMessage1Arg_date</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0}&#34;</span>, <span style=color:#66d9ef>new</span> Date(time));
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelMessageNArg_custom</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0,date,EEE MMM dd HH:mm:ss zzz yyyy}&#34;</span>, <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{time});
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelMessageNArg_date</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0}&#34;</span>, <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{<span style=color:#66d9ef>new</span> Date(time)});
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So what does the benchmark say for these?</p><pre tabindex=0><code>Benchmark                                      Mode  Cnt          Score          Error  Units
+JulBenchmark.helperStringConcat               thrpt   20    3878438.607 ±    57378.392  ops/s
+JulBenchmark.levelMessage1Arg_custom          thrpt   20  166976758.162 ±  6073258.725  ops/s
+JulBenchmark.levelMessage1Arg_date            thrpt   20  267808265.736 ±  4607295.478  ops/s
+JulBenchmark.levelStringConcat                thrpt   20    3904071.260 ±   112723.048  ops/s
+JulBenchmark.levelMessageNArg_custom          thrpt   20  167622786.200 ±  3108069.452  ops/s
+JulBenchmark.levelMessageNArg_date            thrpt   20  178923942.807 ±  2145153.495  ops/s
+</code></pre><p>So as we feared&mldr; that String concatenation is killing our performance&mldr;</p><p>But what is going on with the single arg date&mldr; let&rsquo;s take a look at the bytecode:</p><pre tabindex=0><code>      public void levelMessage1Arg_custom(org.openjdk.jmh.infra.Blackhole);
+        descriptor: (Lorg/openjdk/jmh/infra/Blackhole;)V
+        flags: ACC_PUBLIC    Code:      stack=5, locals=2, args_size=2
+             0: getstatic     #4                  // Field LOGGER:Ljava/util/logging/Logger;
+             3: getstatic     #15                 // Field java/util/logging/Level.FINE:Ljava/util/logging/Level;
+             6: ldc           #22                 // String Started at {0,date,EEE MMM dd HH:mm:ss zzz yyyy}
+             8: getstatic     #2                  // Field time:J
+            11: invokestatic  #19                 // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+            14: invokevirtual #23                 // Method java/util/logging/Logger.log:(Ljava/util/logging/Level;Ljava/lang/String;Ljava/lang/Object;)V
+            17: getstatic     #2                  // Field time:J
+            20: lconst_1
+            21: ladd
+            22: putstatic     #2                  // Field time:J
+            25: aload_1
+            26: getstatic     #2                  // Field time:J
+            29: invokevirtual #3                  // Method org/openjdk/jmh/infra/Blackhole.consume:(J)V
+            32: return
+          LineNumberTable:
+            line 110: 0
+            line 111: 17
+            line 112: 25
+            line 113: 32
+          LocalVariableTable:
+            Start  Length  Slot  Name   Signature
+                0      33     0  this   Lcom/onedash/JulBenchmark;
+                0      33     1 blackhole   Lorg/openjdk/jmh/infra/Blackhole;
+        RuntimeVisibleAnnotations:
+          0: #53()
+</code></pre><p>And Long.valueOf looks like</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> Long <span style=color:#a6e22e>valueOf</span>(<span style=color:#66d9ef>long</span> l) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> offset <span style=color:#f92672>=</span> 128;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (l <span style=color:#f92672>&gt;=</span> <span style=color:#f92672>-</span>128 <span style=color:#f92672>&amp;&amp;</span> l <span style=color:#f92672>&lt;=</span> 127) { <span style=color:#75715e>// will cache</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>return</span> LongCache.<span style=color:#a6e22e>cache</span><span style=color:#f92672>[</span>(<span style=color:#66d9ef>int</span>)l <span style=color:#f92672>+</span> offset<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> Long(l);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>I wonder what would happen if we ignored the cache&mldr;</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelMessage1Arg_customWAT</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0,date,EEE MMM dd HH:mm:ss zzz yyyy}&#34;</span>, <span style=color:#66d9ef>new</span> Long(time));
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>levelMessageNArg_customWAT</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0,date,EEE MMM dd HH:mm:ss zzz yyyy}&#34;</span>, <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{<span style=color:#66d9ef>new</span> Long(time)});
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>If we look at the benchmarks for those:</p><pre tabindex=0><code>Benchmark                                      Mode  Cnt          Score          Error  Units
+JulBenchmark.levelMessage1Arg_customWAT       thrpt   20  273177646.084 ±  7367926.789  ops/s
+JulBenchmark.levelMessageNArg_customWAT       thrpt   20  178868531.695 ±  8171421.563  ops/s
+</code></pre><p>So bypassing the auto-boxing and using explicit boxing of a Long is actually about 7% faster when you are putting the Long in an array&mldr; but when passed using the single argument helper, explicit boxing is 63% faster!</p><p>I wonder if somebody should tell IntelliJ to quit whining!</p><p>Finally, what about if we move the guard out explicitly:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>guardedLevelMessageNArg</span>(Blackhole blackhole) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isLoggable</span>(Level.<span style=color:#a6e22e>FINE</span>)) {
+</span></span><span style=display:flex><span>        LOGGER.<span style=color:#a6e22e>log</span>(Level.<span style=color:#a6e22e>FINE</span>, <span style=color:#e6db74>&#34;Started at {0,date,EEE MMM dd HH:mm:ss zzz yyyy}&#34;</span>, <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[]</span>{<span style=color:#66d9ef>new</span> Long(time)});
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    time<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>    blackhole.<span style=color:#a6e22e>consume</span>(time);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>What does that benchmark like:</p><pre tabindex=0><code>Benchmark                              Mode  Cnt          Score         Error  Units
+JulBenchmark.guardedLevelMessageNArg  thrpt   20  295175956.393 ± 5381049.710  ops/s
+</code></pre><p>OK, so back to Baptiste&rsquo;s original question:</p><ul><li>The arrays are actually very cheap, at least compared to auto-boxing of say longs</li><li>The LOGGER.info() style is just not worth the risk, always give the level that makes it easier to switch to parameterized.</li><li>When not being logged, JUL logging can be very cheap e.g. compare noLogging benchmark with levelMessage1Arg_date or levelMessage1Arg_customWAT where we saw our throughput only drop by about 25%. This compares quite favourably with guardedLevelMessageNArg which only has a drop of 20%</li></ul><p>My recommendations are thus:</p><p><strong>IF YOU HAVE TO USE Java Utils Logging</strong></p><ol><li>Bash people on the head so you can use a better logging framework</li><li>Never use the LOGGER.info() style statements, too risky that somebody will be lazy and concatenate something in there</li><li>In regular code: Don&rsquo;t worry about the array creation</li><li>In proven hot-spot code where logging defaults to off: Wrap all logging statements with a guard of (LOGGER.isLoggable(Level.___)) { &mldr; }. If you have multiple guards in the same method, extract the level check to a local variable.</li></ol><p>And please remember point #1</p></article></div></div></div></div></div></div></main></div><script type=application/javascript src=https://stephenc.github.io/js/toc.js></script><link rel=stylesheet href=https://stephenc.github.io/css/toc.css></div><div class="footer container-xl width-full p-responsive"><div class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between flex-sm-items-center pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light"><a aria-label=Homepage title=GitHub class="footer-octicon d-none d-lg-block mr-lg-4" href=https://stephenc.github.io/><svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" width="24"><path fill-rule="evenodd" d="M8 0C3.58.0.0 3.58.0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38.0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95.0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12.0.0.67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15.0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48.0 1.07-.01 1.93-.01 2.2.0.21.15.46.55.38A8.013 8.013.0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0"><li class="mr-3 mr-lg-0">Theme by <a href=https://github.com/MeiK2333/github-style>github-style</a></li><li class="mr-3 mr-lg-0">GitHub and the Invertocat logo are trademarks of <a href=https://github.com/>GitHub, Inc.</a></li></ul></div><div class="d-flex flex-justify-center pb-6"><span class="f6 text-gray-light"></span></div></div></body><script type=application/javascript src=https://stephenc.github.io/js/github-style.js></script><script src=https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js></script><script type=application/javascript src=https://stephenc.github.io/js/search.js></script></html>
