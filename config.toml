@@ -9,7 +9,7 @@ theme = "m10c"
 [params]
   author = "stephenc"
   description = "Notes on JVM, tooling, and platform engineering"
-  avatar = ""
+  avatar = "/images/avatar.jpg"
   menu_title = "stephenc"
 
 # Main menu entries
