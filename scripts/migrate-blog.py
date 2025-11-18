@@ -16,15 +16,48 @@ from pathlib import Path
 import html
 from bs4 import BeautifulSoup
 import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def fetch_blog_content(url):
-    """Fetch the blog content from the URL."""
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.text
+    """Fetch the blog content from the URL using Selenium for dynamic content."""
+    # Set up Chrome options for headless browsing
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+    
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(url)
+        
+        # Wait for content to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
+        )
+        
+        # Wait a bit more for dynamic content
+        time.sleep(3)
+        
+        # Get the page source after JavaScript has executed
+        html_content = driver.page_source
+        driver.quit()
+        
+        return html_content
+        
+    except Exception as e:
+        print(f"Selenium failed, falling back to requests: {e}")
+        # Fallback to requests
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.text
 
 def clean_content(content):
     """Clean and convert HTML content to markdown."""
