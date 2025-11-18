@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Devops on Stephen's technical blog</title><link>https://stephenc.github.io/tags/devops/</link><description>Recent content in Devops on Stephen's technical blog</description><generator>Hugo</generator><language>en-gb</language><lastBuildDate>Tue, 18 Nov 2025 12:00:00 +0000</lastBuildDate><atom:link href="https://stephenc.github.io/tags/devops/index.xml" rel="self" type="application/rss+xml"/><item><title>When a Kubernetes Operator Makes Sense</title><link>https://stephenc.github.io/post/2025-11-18-when-a-kubernetes-operator-makes-sense/</link><pubDate>Tue, 18 Nov 2025 12:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2025-11-18-when-a-kubernetes-operator-makes-sense/</guid><description>&lt;h1 id="when-a-kubernetes-operator-makes-sense"&gt;When a Kubernetes Operator Makes Sense&lt;/h1&gt;
+&lt;p&gt;&lt;img src="https://stephenc.github.io/images/post/2025-11-18-when-a-kubernetes-operator-makes-sense.png" alt="Simplifying a tangled mess with a Kubernetes Operator"&gt;&lt;/p&gt;
+&lt;h2 id="beyond-yaml-real-world-lessons-from-managing-complex-infrastructure"&gt;Beyond YAML: Real-World Lessons from Managing Complex Infrastructure&lt;/h2&gt;
+&lt;p&gt;There are plenty of ways to deploy applications onto Kubernetes:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;raw &lt;code&gt;kubectl apply&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Kustomize overlays&lt;/li&gt;
+&lt;li&gt;Helm charts&lt;/li&gt;
+&lt;li&gt;sidecars and init containers&lt;/li&gt;
+&lt;li&gt;and, at the far end of the spectrum, fully-fledged operators&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Most teams start at the simple end and stay there. And they should, most applications don’t need anything more complicated than a Deployment, a few ConfigMaps, and a &lt;code&gt;kubectl apply -k&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>
