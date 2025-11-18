@@ -3,7 +3,8 @@ languageCode = "en-gb"
 title = "stephenc"
 theme = "m10c"
 
-paginate = 10
+[pagination]
+  pagerSize = 10
 
 [params]
   author = "stephenc"
