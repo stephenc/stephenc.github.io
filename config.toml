@@ -7,7 +7,7 @@ theme = "github-style"
   pagerSize = 10
 
 [params]
-  author = "stephenc"
+  author = "Stephen Connolly"
   description = "Longer form musings"
   github = "stephenc"
   linkedin = "stephenalanconnolly"
@@ -19,6 +19,7 @@ theme = "github-style"
   headerIcon = "/images/top-icon.png"
   menu_title = "stephenc"
   enableSearch = true
+  location = "Ireland"
 
 [outputs]
   home = ["html", "json"]
