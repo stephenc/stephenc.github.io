@@ -1,16 +1,32 @@
 baseURL = "https://stephenc.github.io/"
 languageCode = "en-gb"
-title = "stephenc"
-theme = "m10c"
+title = "Stephen's technical blog"
+theme = "github-style"
 
 [pagination]
   pagerSize = 10
 
 [params]
   author = "stephenc"
-  description = "Notes on JVM, tooling, and platform engineering"
+  description = "Longer form musings"
+  github = "stephenc"
+  linkedin = "stephenalanconnolly"
   avatar = "/images/avatar.jpg"
+  keywords = "blog"
+  rss = true
+  lastmod = true
+  userStatusEmoji = "😀"
+  headerIcon = "/images/gitHub-mark-white.png"
   menu_title = "stephenc"
+  enableSearch = true
+
+[outputs]
+  home = ["html", "json"]
+
+[outputFormats.json]
+  mediaType = "application/json"
+  baseName = "index"
+  isPlainText = false
 
 # Main menu entries
 [[menu.main]]
