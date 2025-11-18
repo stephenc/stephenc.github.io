@@ -49,6 +49,21 @@ def extract_posts_from_page(soup):
     # Debug: Print some HTML structure to understand the page
     print("Looking for post containers...")
     
+    # First, let's see what we're working with
+    title_tag = soup.find('title')
+    if title_tag:
+        print(f"Page title: {title_tag.get_text()}")
+    
+    # Look for all links that might be blog post links
+    all_links = soup.find_all('a', href=True)
+    blog_post_links = []
+    for link in all_links:
+        href = link.get('href', '')
+        if 'javaadventure.blogspot.com' in href and '/20' in href and '.html' in href:
+            blog_post_links.append(link)
+    
+    print(f"Found {len(blog_post_links)} potential blog post links")
+    
     # Blogspot uses different selectors - try multiple approaches
     selectors_to_try = [
         'div.post',
@@ -58,7 +73,11 @@ def extract_posts_from_page(soup):
         'div.hentry',
         'div.entry',
         '.post-outer',
-        '.blog-posts .post'
+        '.blog-posts .post',
+        '.post-title',
+        'h1 a[href*="blogspot.com"]',
+        'h2 a[href*="blogspot.com"]',
+        'h3 a[href*="blogspot.com"]'
     ]
     
     post_containers = []
@@ -70,73 +89,98 @@ def extract_posts_from_page(soup):
             break
     
     if not post_containers:
-        # Fallback: look for any div containing h1, h2, or h3 with links
+        # Fallback: look for any element containing blog post links
         print("Trying fallback approach...")
-        all_headers = soup.find_all(['h1', 'h2', 'h3'])
-        for header in all_headers:
-            link = header.find('a')
-            if link and 'blogspot.com' in link.get('href', ''):
-                post_containers.append(header.parent)
+        for link in blog_post_links:
+            # Find the parent container that likely contains the full post
+            parent = link.parent
+            while parent and parent.name != 'body':
+                # Look for a container that seems to hold a full post
+                if parent.name in ['div', 'article', 'section']:
+                    text_content = parent.get_text()
+                    if len(text_content) > 100:  # Likely contains post content
+                        post_containers.append(parent)
+                        break
+                parent = parent.parent
+        
+        # Remove duplicates
+        post_containers = list(set(post_containers))
         print(f"Found {len(post_containers)} posts via fallback")
     
     for container in post_containers:
         try:
             # Extract title - look for header with link
             title_elem = None
+            title = ""
+            post_url = ""
+            
+            # Look for title in various ways
             for header_tag in ['h1', 'h2', 'h3']:
                 header = container.find(header_tag)
                 if header:
                     link = header.find('a')
-                    if link:
+                    if link and 'blogspot.com' in link.get('href', ''):
                         title_elem = header
+                        title = header.get_text().strip()
+                        post_url = link.get('href', '')
                         break
             
-            if not title_elem:
+            # If no title found in headers, look for any link to a blog post
+            if not title:
+                link = container.find('a', href=lambda x: x and 'javaadventure.blogspot.com' in x and '.html' in x)
+                if link:
+                    title = link.get_text().strip()
+                    post_url = link.get('href', '')
+            
+            if not title:
                 continue
                 
-            title = title_elem.get_text().strip()
             print(f"Found post: {title}")
+            print(f"URL: {post_url}")
             
             # Extract date - look for various date patterns
             date_str = "2006-01-01"  # Default
             
-            # Look for date in various places
-            date_text = container.get_text()
-            date_patterns = [
-                r'Posted.*?(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})',
-                r'(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})',
-                r'(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?\s*,?\s*(\d{4})',
-                r'/(\d{4})/(\d{2})/[^/]+\.html'  # From URL
-            ]
+            # First try to extract from URL
+            if post_url:
+                url_date_match = re.search(r'/(\d{4})/(\d{2})/[^/]+\.html', post_url)
+                if url_date_match:
+                    year, month = url_date_match.group(1), url_date_match.group(2)
+                    date_str = f"{year}-{month}-01"
+                    print(f"Extracted date from URL: {date_str}")
             
-            for pattern in date_patterns:
-                date_match = re.search(pattern, date_text)
-                if date_match:
-                    if len(date_match.groups()) == 3:
-                        if pattern.endswith('html'):  # URL pattern
-                            year, month = date_match.group(1), date_match.group(2)
-                            day = "01"
-                        else:
-                            if date_match.group(1).isdigit():  # Day first
-                                day = date_match.group(1).zfill(2)
-                                month_name = date_match.group(2)
-                                year = date_match.group(3)
-                            else:  # Month first
-                                month_name = date_match.group(1)
-                                day = date_match.group(2).zfill(2)
-                                year = date_match.group(3)
-                            
-                            month_names = {
-                                'January': '01', 'February': '02', 'March': '03', 'April': '04',
-                                'May': '05', 'June': '06', 'July': '07', 'August': '08',
-                                'September': '09', 'October': '10', 'November': '11', 'December': '12',
-                                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
-                                'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
-                                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
-                            }
-                            month = month_names.get(month_name, '01')
+            # If URL date extraction failed, look in text content
+            if date_str == "2006-01-01":
+                date_text = container.get_text()
+                date_patterns = [
+                    r'Posted.*?(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})',
+                    r'(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})',
+                    r'(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?\s*,?\s*(\d{4})'
+                ]
+                
+                for pattern in date_patterns:
+                    date_match = re.search(pattern, date_text)
+                    if date_match:
+                        if date_match.group(1).isdigit():  # Day first
+                            day = date_match.group(1).zfill(2)
+                            month_name = date_match.group(2)
+                            year = date_match.group(3)
+                        else:  # Month first
+                            month_name = date_match.group(1)
+                            day = date_match.group(2).zfill(2)
+                            year = date_match.group(3)
                         
+                        month_names = {
+                            'January': '01', 'February': '02', 'March': '03', 'April': '04',
+                            'May': '05', 'June': '06', 'July': '07', 'August': '08',
+                            'September': '09', 'October': '10', 'November': '11', 'December': '12',
+                            'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                            'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                            'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                        }
+                        month = month_names.get(month_name, '01')
                         date_str = f"{year}-{month}-{day}"
+                        print(f"Extracted date from text: {date_str}")
                         break
             
             # Extract content - get the main text content
