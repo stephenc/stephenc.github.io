@@ -1,7 +1,7 @@
 baseURL = "https://stephenc.github.io/"
 languageCode = "en-gb"
 title = "Stephen's technical blog"
-theme = "github-style"
+theme = ["hugo-admonitions", "github-style"]
 
 [pagination]
   pagerSize = 10
