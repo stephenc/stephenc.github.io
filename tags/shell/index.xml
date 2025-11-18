@@ -1,39 +1,57 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell on Stephen's technical blog</title><link>https://stephenc.github.io/tags/shell/</link><description>Recent content in Shell on Stephen's technical blog</description><generator>Hugo</generator><language>en-gb</language><lastBuildDate>Fri, 01 Feb 2013 00:00:00 +0000</lastBuildDate><atom:link href="https://stephenc.github.io/tags/shell/index.xml" rel="self" type="application/rss+xml"/><item><title>Note to self: Updated usejava BASH function for MacOSX</title><link>https://stephenc.github.io/post/2013-02-01-note-to-self-updated-usejava-bash-function-for-macosx/</link><pubDate>Fri, 01 Feb 2013 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2013-02-01-note-to-self-updated-usejava-bash-function-for-macosx/</guid><description>&lt;p>For use when you have multiple JVM providers (Apple &amp;amp; Oracle), you want to be able to switch between JDKs for each CLI&lt;/p>
-&lt;p>usejava ()&lt;/p>
-&lt;p>{&lt;/p>
-&lt;p>local sel=$1.jdk&lt;/p>
-&lt;p>if [ -x &amp;ldquo;/Library/Java/JavaVirtualMachines/jdk$sel/Contents/Home/bin/java&amp;rdquo; -a ! -x &amp;ldquo;/Library/Java/JavaVirtualMachines/$1/Contents/Home/bin/java&amp;rdquo; ]&lt;/p>
-&lt;p>then&lt;/p>
-&lt;p>sel=jdk$sel&lt;/p>
-&lt;p>fi&lt;/p>
-&lt;p>local base=/Library/Java/JavaVirtualMachines&lt;/p>
-&lt;p>if [ -x &amp;ldquo;/System/Library/Java/JavaVirtualMachines/$sel/Contents/Home/bin/java&amp;rdquo; ]&lt;/p>
-&lt;p>then&lt;/p>
-&lt;p>base=/System/Library/Java/JavaVirtualMachines&lt;/p>
-&lt;p>fi&lt;/p>
-&lt;p>if [ -z &amp;ldquo;$1&amp;rdquo; -o ! -x &amp;ldquo;$base/$sel/Contents/Home/bin/java&amp;rdquo; ]&lt;/p>
-&lt;p>then&lt;/p>
-&lt;p>local prefix=&amp;ldquo;Syntax: usejava &amp;quot;&lt;/p>
-&lt;p>for i in /Library/Java/JavaVirtualMachines/* /System/Library/Java/JavaVirtualMachines/*&lt;/p>
-&lt;p>do&lt;/p>
-&lt;p>if [ -x &amp;ldquo;$i/Contents/Home/bin/java&amp;rdquo; ]&lt;/p></description></item><item><title>Handy bash script to fix a pom's SCM section to the current Subversion location</title><link>https://stephenc.github.io/post/2011-03-01-handy-bash-script-to-fix-a-poms-scm-section-to-the-current-subversion-location/</link><pubDate>Tue, 01 Mar 2011 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2011-03-01-handy-bash-script-to-fix-a-poms-scm-section-to-the-current-subversion-location/</guid><description>&lt;p>#!/bin/bash&lt;/p>
-&lt;p>URL=&amp;quot;$(svn info | sed -n -e &amp;lsquo;/^URL:/{s/URL: *//p}&amp;rsquo;)&amp;quot;&lt;/p>
-&lt;p>ROOT=&amp;quot;$(svn info | sed -n -e &amp;ldquo;/^Repository Root:/{s/Repository Root: *//p}&amp;rdquo;)&amp;quot;&lt;/p>
-&lt;p>NEW_PATH=&amp;quot;${URL#$ROOT}&amp;quot;&lt;/p>
-&lt;p>OLD_URL=&amp;quot;$(sed -n &amp;lsquo;/&amp;lt; *scm *&amp;gt;/,/&amp;lt; */scm *&amp;gt;/p&amp;rsquo; pom.xml | sed -n &amp;lsquo;/&amp;lt; *connection *&amp;gt;/,/&amp;lt; */ *connection *&amp;gt;/{s/.*connection &lt;em>&amp;gt; &lt;em>scm:svn:([^ &amp;lt;]&lt;/em>)[ &amp;lt;].&lt;/em>/\1/p}&amp;rsquo;)&amp;quot;&lt;/p>
-&lt;p>OLD_PATH=&amp;quot;${OLD_URL#$ROOT}&amp;quot;&lt;/p>
-&lt;p>echo &amp;ldquo;OLD URL: $OLD_URL&amp;rdquo;&lt;/p>
-&lt;p>echo &amp;ldquo;NEW URL: $URL&amp;rdquo;&lt;/p>
-&lt;p>echo &amp;ldquo;ROOT: $ROOT&amp;rdquo;&lt;/p>
-&lt;p>echo &amp;ldquo;OLD PATH: $OLD_PATH&amp;rdquo;&lt;/p>
-&lt;p>echo &amp;ldquo;NEW PATH: $NEW_PATH&amp;rdquo;&lt;/p>
-&lt;p>sed -i &amp;lsquo;/&amp;lt; *scm *&amp;gt;/,/&amp;lt; */scm *&amp;gt;/{s/&amp;rsquo;${OLD_PATH////\/}&amp;rsquo;/&amp;rsquo;${NEW_PATH////\/}&amp;rsquo;/}&amp;rsquo; pom.xml&lt;/p></description></item><item><title>My magic Maven and ANT version selection bash functions (for the Mac)</title><link>https://stephenc.github.io/post/2011-03-01-my-magic-maven-and-ant-version-selection-bash-functions-for-the-mac/</link><pubDate>Tue, 01 Mar 2011 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2011-03-01-my-magic-maven-and-ant-version-selection-bash-functions-for-the-mac/</guid><description>&lt;p>OK, so a while back I posted my bash script for selecting the maven version to use for the current session &lt;a href="http://s.apache.org/FQ2">http://s.apache.org/FQ2&lt;/a>&lt;/p>
-&lt;p>Now that I have a Mac for my full time development machine, I thought I would share my version of these functions for Mac users:&lt;/p>
-&lt;p>usemvn ()&lt;/p>
-&lt;p>{&lt;/p>
-&lt;p>if [ -z &amp;ldquo;$1&amp;rdquo; -o ! -x &amp;ldquo;/usr/share/java/maven-$1/bin/mvn&amp;rdquo; ]&lt;/p>
-&lt;p>then&lt;/p>
-&lt;p>local prefix=&amp;ldquo;Syntax: usemvn &amp;quot;&lt;/p>
-&lt;p>for i in /usr/share/java/maven-*&lt;/p>
-&lt;p>do&lt;/p>
-&lt;p>if [ -x &amp;ldquo;$i/bin/mvn&amp;rdquo; ]; then&lt;/p></description></item><item><title>Quick and dirty remove -SNAPSHOTS from your local maven repository</title><link>https://stephenc.github.io/post/2010-07-01-quick-and-dirty-remove-snapshots-from-your-local-maven-repository/</link><pubDate>Thu, 01 Jul 2010 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2010-07-01-quick-and-dirty-remove-snapshots-from-your-local-maven-repository/</guid><description>&lt;p>Works on *nixfind ~/.m2/repository -type d -name *-SNAPSHOT -exec rm -rvf {} ;By searching for the directories we should catch the -YYYYMMDD.HHMMSS format of snapshots also&lt;/p></description></item><item><title>Easy parallelization with Bash in Linux</title><link>https://stephenc.github.io/post/2010-05-01-easy-parallelization-with-bash-in-linux/</link><pubDate>Sat, 01 May 2010 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2010-05-01-easy-parallelization-with-bash-in-linux/</guid><description>&lt;p>Cool post I just found:http://coldattic.info/shvedsky/pro/blogs/a-foo-walks-into-a-bar/posts/7&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell on Stephen's technical blog</title><link>https://stephenc.github.io/tags/shell/</link><description>Recent content in Shell on Stephen's technical blog</description><generator>Hugo</generator><language>en-gb</language><lastBuildDate>Fri, 01 Feb 2013 00:00:00 +0000</lastBuildDate><atom:link href="https://stephenc.github.io/tags/shell/index.xml" rel="self" type="application/rss+xml"/><item><title>Note to self: Updated usejava BASH function for MacOSX</title><link>https://stephenc.github.io/post/2013-02-01-note-to-self-updated-usejava-bash-function-for-macosx/</link><pubDate>Fri, 01 Feb 2013 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2013-02-01-note-to-self-updated-usejava-bash-function-for-macosx/</guid><description>&lt;p&gt;For use when you have multiple JVM providers (Apple &amp;amp; Oracle), you want to be able to switch between JDKs for each CLI&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;usejava &lt;span style="color:#f92672"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; local sel&lt;span style="color:#f92672"&gt;=&lt;/span&gt;$1.jdk
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt; -x &lt;span style="color:#e6db74"&gt;&amp;#34;/Library/Java/JavaVirtualMachines/jdk&lt;/span&gt;$sel&lt;span style="color:#e6db74"&gt;/Contents/Home/bin/java&amp;#34;&lt;/span&gt; -a ! -x &lt;span style="color:#e6db74"&gt;&amp;#34;/Library/Java/JavaVirtualMachines/&lt;/span&gt;$1&lt;span style="color:#e6db74"&gt;/Contents/Home/bin/java&amp;#34;&lt;/span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sel&lt;span style="color:#f92672"&gt;=&lt;/span&gt;jdk$sel
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; local base&lt;span style="color:#f92672"&gt;=&lt;/span&gt;/Library/Java/JavaVirtualMachines
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt; -x &lt;span style="color:#e6db74"&gt;&amp;#34;/System/Library/Java/JavaVirtualMachines/&lt;/span&gt;$sel&lt;span style="color:#e6db74"&gt;/Contents/Home/bin/java&amp;#34;&lt;/span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; base&lt;span style="color:#f92672"&gt;=&lt;/span&gt;/System/Library/Java/JavaVirtualMachines
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt; -z &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;$1&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt; -o ! -x &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;$base&lt;span style="color:#e6db74"&gt;/&lt;/span&gt;$sel&lt;span style="color:#e6db74"&gt;/Contents/Home/bin/java&amp;#34;&lt;/span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; local prefix&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;Syntax: usejava &amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; i in /Library/Java/JavaVirtualMachines/* /System/Library/Java/JavaVirtualMachines/*
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt; -x &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;$i&lt;span style="color:#e6db74"&gt;/Contents/Home/bin/java&amp;#34;&lt;/span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; /bin/echo -n &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;$prefix&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;basename $i | sed -e &lt;span style="color:#e6db74"&gt;&amp;#34;s/^jdk//;s/\.jdk&lt;/span&gt;$&lt;span style="color:#e6db74"&gt;//;&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; prefix&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34; | &amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;done&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; /bin/echo &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt; -z &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;$JAVA_HOME&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; export PATH&lt;span style="color:#f92672"&gt;=&lt;/span&gt;$base/$sel/Contents/Home/bin:$PATH
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; export PATH&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;echo $PATH|sed -e &lt;span style="color:#e6db74"&gt;&amp;#34;s:&lt;/span&gt;$JAVA_HOME&lt;span style="color:#e6db74"&gt;/bin:&lt;/span&gt;$base&lt;span style="color:#e6db74"&gt;/&lt;/span&gt;$sel&lt;span style="color:#e6db74"&gt;/Contents/Home/bin:g&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; export JAVA_HOME&lt;span style="color:#f92672"&gt;=&lt;/span&gt;$base/$sel/Contents/Home
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; echo -n -e &lt;span style="color:#e6db74"&gt;&amp;#34;\033]0;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;java -version 2&amp;gt;&amp;amp;&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt; | sed -e &lt;span style="color:#e6db74"&gt;&amp;#34;s/.*\&amp;#34;\(.*\)\&amp;#34;.*/Java \1/;q&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;\007&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There is additional fun to be had, given that most Java based launchers that try to fix &lt;code&gt;JAVA_HOME&lt;/code&gt; when not set will guess the Apple JVM path… so the following Java program can help&lt;/p&gt;</description></item><item><title>Handy bash script to fix a pom's SCM section to the current Subversion location</title><link>https://stephenc.github.io/post/2011-03-01-handy-bash-script-to-fix-a-poms-scm-section-to-the-current-subversion-location/</link><pubDate>Tue, 01 Mar 2011 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2011-03-01-handy-bash-script-to-fix-a-poms-scm-section-to-the-current-subversion-location/</guid><description>&lt;p&gt;#!/bin/bash&lt;/p&gt;
+&lt;p&gt;URL=&amp;quot;$(svn info | sed -n -e &amp;lsquo;/^URL:/{s/URL: *//p}&amp;rsquo;)&amp;quot;&lt;/p&gt;
+&lt;p&gt;ROOT=&amp;quot;$(svn info | sed -n -e &amp;ldquo;/^Repository Root:/{s/Repository Root: *//p}&amp;rdquo;)&amp;quot;&lt;/p&gt;
+&lt;p&gt;NEW_PATH=&amp;quot;${URL#$ROOT}&amp;quot;&lt;/p&gt;
+&lt;p&gt;OLD_URL=&amp;quot;$(sed -n &amp;lsquo;/&amp;lt; *scm *&amp;gt;/,/&amp;lt; */scm *&amp;gt;/p&amp;rsquo; pom.xml | sed -n &amp;lsquo;/&amp;lt; *connection *&amp;gt;/,/&amp;lt; */ *connection *&amp;gt;/{s/.*connection &lt;em&gt;&amp;gt; &lt;em&gt;scm:svn:([^ &amp;lt;]&lt;/em&gt;)[ &amp;lt;].&lt;/em&gt;/\1/p}&amp;rsquo;)&amp;quot;&lt;/p&gt;
+&lt;p&gt;OLD_PATH=&amp;quot;${OLD_URL#$ROOT}&amp;quot;&lt;/p&gt;
+&lt;p&gt;echo &amp;ldquo;OLD URL: $OLD_URL&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;echo &amp;ldquo;NEW URL: $URL&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;echo &amp;ldquo;ROOT: $ROOT&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;echo &amp;ldquo;OLD PATH: $OLD_PATH&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;echo &amp;ldquo;NEW PATH: $NEW_PATH&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;sed -i &amp;lsquo;/&amp;lt; *scm *&amp;gt;/,/&amp;lt; */scm *&amp;gt;/{s/&amp;rsquo;${OLD_PATH////\/}&amp;rsquo;/&amp;rsquo;${NEW_PATH////\/}&amp;rsquo;/}&amp;rsquo; pom.xml&lt;/p&gt;</description></item><item><title>My magic Maven and ANT version selection bash functions (for the Mac)</title><link>https://stephenc.github.io/post/2011-03-01-my-magic-maven-and-ant-version-selection-bash-functions-for-the-mac/</link><pubDate>Tue, 01 Mar 2011 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2011-03-01-my-magic-maven-and-ant-version-selection-bash-functions-for-the-mac/</guid><description>&lt;p&gt;OK, so a while back I posted my bash script for selecting the maven version to use for the current session &lt;a href="http://s.apache.org/FQ2"&gt;http://s.apache.org/FQ2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Now that I have a Mac for my full time development machine, I thought I would share my version of these functions for Mac users:&lt;/p&gt;
+&lt;p&gt;usemvn ()&lt;/p&gt;
+&lt;p&gt;{&lt;/p&gt;
+&lt;p&gt;if [ -z &amp;ldquo;$1&amp;rdquo; -o ! -x &amp;ldquo;/usr/share/java/maven-$1/bin/mvn&amp;rdquo; ]&lt;/p&gt;
+&lt;p&gt;then&lt;/p&gt;
+&lt;p&gt;local prefix=&amp;ldquo;Syntax: usemvn &amp;quot;&lt;/p&gt;
+&lt;p&gt;for i in /usr/share/java/maven-*&lt;/p&gt;
+&lt;p&gt;do&lt;/p&gt;
+&lt;p&gt;if [ -x &amp;ldquo;$i/bin/mvn&amp;rdquo; ]; then&lt;/p&gt;</description></item><item><title>Quick and dirty remove -SNAPSHOTS from your local maven repository</title><link>https://stephenc.github.io/post/2010-07-01-quick-and-dirty-remove-snapshots-from-your-local-maven-repository/</link><pubDate>Thu, 01 Jul 2010 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2010-07-01-quick-and-dirty-remove-snapshots-from-your-local-maven-repository/</guid><description>&lt;p&gt;Works on *nixfind ~/.m2/repository -type d -name *-SNAPSHOT -exec rm -rvf {} ;By searching for the directories we should catch the -YYYYMMDD.HHMMSS format of snapshots also&lt;/p&gt;</description></item><item><title>Easy parallelization with Bash in Linux</title><link>https://stephenc.github.io/post/2010-05-01-easy-parallelization-with-bash-in-linux/</link><pubDate>Sat, 01 May 2010 00:00:00 +0000</pubDate><guid>https://stephenc.github.io/post/2010-05-01-easy-parallelization-with-bash-in-linux/</guid><description>&lt;p&gt;Cool post I just found:http://coldattic.info/shvedsky/pro/blogs/a-foo-walks-into-a-bar/posts/7&lt;/p&gt;</description></item></channel></rss>
