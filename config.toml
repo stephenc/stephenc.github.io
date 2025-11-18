@@ -16,7 +16,7 @@ theme = "github-style"
   rss = true
   lastmod = true
   userStatusEmoji = "😀"
-  headerIcon = "/images/gitHub-mark-white.png"
+  headerIcon = "/images/top-icon.png"
   menu_title = "stephenc"
   enableSearch = true
 
