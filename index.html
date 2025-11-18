@@ -47,7 +47,7 @@ Log4jBenchmark.debug1Arg_date         thrpt   20  179653191.248 ± 2731044.349  
 Log4jBenchmark.guardedDebug1Arg_date  thrpt   20  207001790.376 ± 2074020.617  ops/s
 </code></pre><p>We can also compare guarding with SLF4J over logback</p></div><p class="mb-0 f6 text-gray"><a href=/tags/java class="pinned-item-meta muted-link"><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
 Java</a></p></div></div></li><li class="col-12 col-md-6 col-lg-6 mb-3 d-flex flex-content-stretch"><div class="Box pinned-item-list-item d-flex p-3 width-full js-pinned-item-list-item public source reorderable sortable-button-item"><div class=pinned-item-list-item-content><div class="d-flex width-full flex-items-center position-relative"><svg class="octicon octicon-repo mr-2 text-gray flex-shrink-0" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2 2.5A2.5 2.5.0 014.5.0h8.75a.75.75.0 01.75.75v12.5a.75.75.0 01-.75.75h-2.5a.75.75.0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75.0 01-1.072 1.05A2.495 2.495.0 012 11.5v-9zm10.5-1V9h-8c-.356.0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25.0 00.4.2l1.45-1.087a.25.25.0 01.3.0L8.6 15.7a.25.25.0 00.4-.2v-3.25A.25.25.0 008.75 12h-3.5a.25.25.0 00-.25.25z"/></svg>
-<a class="text-bold flex-auto min-width-0" href=https://stephenc.github.io/post/2016-12-05-costs-java-utils-logging/><span class=repo title="The costs of Java Utils Logging">The costs of Java Utils Logging</span></a></div><div name=summary class="pinned-item-desc text-gray text-small d-block mt-2 mb-3"><p>One of my colleagues had a question:</p><p>Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.</p></div><p class="mb-0 f6 text-gray"><a href=/tags/java class="pinned-item-meta muted-link"><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
+<a class="text-bold flex-auto min-width-0" href=https://stephenc.github.io/post/2016-12-05-costs-java-utils-logging/><span class=repo title="The costs of Java Utils Logging">The costs of Java Utils Logging</span></a></div><div name=summary class="pinned-item-desc text-gray text-small d-block mt-2 mb-3"><p>One of my colleagues had a question:</p><blockquote class=twitter-tweet><a href=https://twitter.com/bmathus/status/805646932819537920></a></blockquote><script async src=https://platform.x.com/widgets.js></script><p>Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.</p></div><p class="mb-0 f6 text-gray"><a href=/tags/java class="pinned-item-meta muted-link"><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
 Java</a></p></div></div></li><li class="col-12 col-md-6 col-lg-6 mb-3 d-flex flex-content-stretch"><div class="Box pinned-item-list-item d-flex p-3 width-full js-pinned-item-list-item public source reorderable sortable-button-item"><div class=pinned-item-list-item-content><div class="d-flex width-full flex-items-center position-relative"><svg class="octicon octicon-repo mr-2 text-gray flex-shrink-0" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2 2.5A2.5 2.5.0 014.5.0h8.75a.75.75.0 01.75.75v12.5a.75.75.0 01-.75.75h-2.5a.75.75.0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75.0 01-1.072 1.05A2.495 2.495.0 012 11.5v-9zm10.5-1V9h-8c-.356.0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25.0 00.4.2l1.45-1.087a.25.25.0 01.3.0L8.6 15.7a.25.25.0 00.4-.2v-3.25A.25.25.0 008.75 12h-3.5a.25.25.0 00-.25.25z"/></svg>
 <a class="text-bold flex-auto min-width-0" href=https://stephenc.github.io/post/2016-12-05-costs-other-logging-frameworks/><span class=repo title="The costs of other logging frameworks">The costs of other logging frameworks</span></a></div><div name=summary class="pinned-item-desc text-gray text-small d-block mt-2 mb-3"><p>You asked for it.</p><p>Logback:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Benchmark</span>
 </span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>debug1Arg_date</span>(Blackhole blackhole) {
@@ -79,7 +79,7 @@ LogbackBenchmark.debug2Arg_date  thrpt   20  220576341.742 ± 3778270.898  ops/s
 LogbackBenchmark.debugNArg_date  thrpt   20  134887126.088 ± 2973182.812  ops/s
 </code></pre><p>JUL over SLF4J (same benchmark code but different dependency)</p></div><p class="mb-0 f6 text-gray"><a href=/tags/java class="pinned-item-meta muted-link"><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
 Java</a></p></div></div></li><li class="col-12 col-md-6 col-lg-6 mb-3 d-flex flex-content-stretch"><div class="Box pinned-item-list-item d-flex p-3 width-full js-pinned-item-list-item public source reorderable sortable-button-item"><div class=pinned-item-list-item-content><div class="d-flex width-full flex-items-center position-relative"><svg class="octicon octicon-repo mr-2 text-gray flex-shrink-0" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2 2.5A2.5 2.5.0 014.5.0h8.75a.75.75.0 01.75.75v12.5a.75.75.0 01-.75.75h-2.5a.75.75.0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75.0 01-1.072 1.05A2.495 2.495.0 012 11.5v-9zm10.5-1V9h-8c-.356.0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25.0 00.4.2l1.45-1.087a.25.25.0 01.3.0L8.6 15.7a.25.25.0 00.4-.2v-3.25A.25.25.0 008.75 12h-3.5a.25.25.0 00-.25.25z"/></svg>
-<a class="text-bold flex-auto min-width-0" href=https://stephenc.github.io/post/2014-09-01-version-numbers/><span class=repo title="Version numbers">Version numbers</span></a></div><div name=summary class="pinned-item-desc text-gray text-small d-block mt-2 mb-3"><p>If there are two only things guaranteed to cause all out war between developers, my vote is that those two things are:</p><p>Code formatting conventions</p><p>Version number conventions</p><p>The first is resolved trivially (just shoot anyone suggesting the use of TABs). Until recently most people thought the second was resolved by semver… at least until the developer of one of the more commonly used JavaScript libraries threw the cat amongst the pigeons.</p></div><p class="mb-0 f6 text-gray"></p></div></div></li></ol></div></div><div class="mt-4 position-relative" id=contributions data='[
+<a class="text-bold flex-auto min-width-0" href=https://stephenc.github.io/post/2014-09-08-version-numbers/><span class=repo title="Version numbers">Version numbers</span></a></div><div name=summary class="pinned-item-desc text-gray text-small d-block mt-2 mb-3"><p>If there are two only things guaranteed to cause all out war between developers, my vote is that those two things are:</p><ul><li><p>Code formatting conventions</p></li><li><p>Version number conventions</p></li></ul><p>The first is resolved trivially (just shoot anyone suggesting the use of TABs). Until recently most people thought the second was resolved by <a href=http://semver.org/>semver</a>… at least until the developer of one of the more commonly used JavaScript libraries <a href=https://github.com/jashkenas/underscore/issues/1805#issuecomment-53939077>threw the cat amongst the pigeons</a>.</p></div><p class="mb-0 f6 text-gray"></p></div></div></li></ol></div></div><div class="mt-4 position-relative" id=contributions data='[
 {
   "title": "When%20a%20Kubernetes%20Operator%20Makes%20Sense",
   "link": "https://stephenc.github.io/post/2025-11-18-when-a-kubernetes-operator-makes-sense/",
@@ -112,50 +112,50 @@ Java</a></p></div></div></li><li class="col-12 col-md-6 col-lg-6 mb-3 d-flex fle
 
 {
   "title": "Version%20numbers",
-  "link": "https://stephenc.github.io/post/2014-09-01-version-numbers/",
-  "publishDate": "2014-09-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2014-09-08-version-numbers/",
+  "publishDate": "2014-09-08%2000:00:00"
 },
 
 {
   "title": "Log4j%202.0%20Async%20loggers%20and%20immutability",
-  "link": "https://stephenc.github.io/post/2014-07-01-log4j-20-async-loggers-and-immutability/",
-  "publishDate": "2014-07-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2014-07-28-log4j-20-async-loggers-and-immutability/",
+  "publishDate": "2014-07-28%2000:00:00"
 },
 
 {
-  "title": "If%20you%20don&amp;#39;t%20like%20Maven,%20you%20would%20not%20be%20a%20good%20manager...",
-  "link": "https://stephenc.github.io/post/2014-01-01-if-you-don39t-like-maven-you-would-not-be-a-good-manager/",
-  "publishDate": "2014-01-01%2000:00:00"
+  "title": "If%20you%20don%27t%20like%20Maven,%20you%20would%20not%20be%20a%20good%20manager...",
+  "link": "https://stephenc.github.io/post/2014-01-30-if-you-dont-like-maven-you-would-not-be-a-good-manager/",
+  "publishDate": "2014-01-30%2000:00:00"
 },
 
 {
   "title": "Jenkins%27%20Maven%20job%20type%20considered%20evil",
-  "link": "https://stephenc.github.io/post/2013-11-01-jenkins39-maven-job-type-considered-evil/",
-  "publishDate": "2013-11-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2013-11-06-jenkins-maven-job-type-considered-evil/",
+  "publishDate": "2013-11-06%2000:00:00"
 },
 
 {
   "title": "About%20test%20coverage",
-  "link": "https://stephenc.github.io/post/2013-04-01-about-test-coverage/",
-  "publishDate": "2013-04-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2013-04-19-about-test-coverage/",
+  "publishDate": "2013-04-19%2000:00:00"
 },
 
 {
   "title": "Note%20to%20self:%20Updated%20usejava%20BASH%20function%20for%20MacOSX",
-  "link": "https://stephenc.github.io/post/2013-02-01-note-to-self-updated-usejava-bash-function-for-macosx/",
-  "publishDate": "2013-02-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2013-02-04-note-to-self-updated-usejava-bash-function-for-macosx/",
+  "publishDate": "2013-02-04%2000:00:00"
 },
 
 {
   "title": "iOS%20traing%20course",
-  "link": "https://stephenc.github.io/post/2012-12-01-ios-training-course/",
-  "publishDate": "2012-12-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2012-12-23-ios-training-course/",
+  "publishDate": "2012-12-23%2000:00:00"
 },
 
 {
   "title": "Note%20to%20self:%20Mac%20Keyboard%20and%20%e2%80%98fancy%e2%80%99%20characters",
-  "link": "https://stephenc.github.io/post/2012-10-01-note-to-self-mac-keyboard-and-fancy-characters/",
-  "publishDate": "2012-10-01%2000:00:00"
+  "link": "https://stephenc.github.io/post/2012-10-25-note-to-self-mac-keyboard-and-fancy-characters/",
+  "publishDate": "2012-10-25%2000:00:00"
 },
 
 {
