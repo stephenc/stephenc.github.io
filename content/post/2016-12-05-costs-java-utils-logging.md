@@ -6,6 +6,8 @@ tags: ["Java"]
 
 One of my colleagues had a question:
 
+{{< x "bmathus" "805646932819537920" >}}
+
 Now for some context, when the Jenkins project started off, Kohsuke was working for Sun and felt it would be wrong, as a Sun employee, to use a logging framework other than that provided by the JVM as using a different logging framework could be seen as being implication that the built in Java Utils Logging framework was a steaming pile of excrement.
 
 Now while JUL is not a complete and utter steaming pile of excrement, at times it does indeed throw shades at being one.
@@ -323,6 +325,8 @@ So bypassing the auto-boxing and using explicit boxing of a Long is actually abo
 
 I wonder if somebody should tell IntelliJ to quit whining!
 
+![IntelliJ complains of unnecessary boxing](/images/post/2016-12-05-intellij-complains.png)
+
 Finally, what about if we move the guard out explicitly:
 
 ```java
@@ -356,6 +360,6 @@ My recommendations are thus:
 1. Bash people on the head so you can use a better logging framework
 2. Never use the LOGGER.info() style statements, too risky that somebody will be lazy and concatenate something in there
 3. In regular code: Don't worry about the array creation
-4. In proven hot-spot code where logging defaults to off: Wrap all logging statements with a guard of (LOGGER.isLoggable(Level.___)) { ... }. If you have multiple guards in the same method, extract the level check to a local variable.
+4. In proven hot-spot code where logging defaults to off: Wrap all logging statements with a guard of `(LOGGER.isLoggable(Level.___)) { ... }`. If you have multiple guards in the same method, extract the level check to a local variable.
 
 And please remember point #1

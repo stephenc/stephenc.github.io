@@ -1,6 +1,6 @@
 ---
-title: "If you don&#39;t like Maven, you would not be a good manager..."
-date: 2014-01-01T00:00:00Z
+title: "If you don't like Maven, you would not be a good manager..."
+date: 2014-01-30T00:00:00Z
 ---
 
 We have all had the bad technical managers… the ones who tell you to go and do something… and then micromanage the task they have “delegated” to you.
@@ -19,28 +19,22 @@ So, what does all that have to do with liking Maven?
 
 Well Maven is a build tool. If you need Maven to build a .war file, you should just tell it to build a .war file
 
+```xml
 <project>
-
-<groupId>…</groupId>
-
-<artifactId>…</artifactId>
-
-<version>…</version>
-
-<packaging>war</packaging>
-
-<dependencies>
-
-...
-
-</dependencies>
-
+    <groupId>…</groupId>
+    <artifactId>…</artifactId>
+    <version>…</version>
+    <packaging>war</packaging>
+    <dependencies>
+        ...
+    </dependencies>
 </project>
+```
 
 Why do you want to micromanage Maven and tell it every little thing it must do to build the .war file. Wait until you see what it did with your instructions, then and only then should you refine your instructions.
 
-So… If you don't like Maven, you would not be a good manager… The corollaries are not necessarily true though...
+So… If you don't like Maven, you would not be a good manager… The corollaries are not necessarily true though...
 
-Liking Maven does not mean you will be a good manager… there are other qualities that make a good manager… understanding when and how to micromanage is only one of those qualities
+* Liking Maven does not mean you will be a good manager… there are other qualities that make a good manager… understanding when and how to micromanage is only one of those qualities
 
-Being a good manager does not mean you will like Maven… for example if all your developers (who love to micromanage and thankfully are not managers because of their micromanagement adoration) tell you that Maven is a pain… well a good manager will hear what their team is saying and take it on board… after all they are there to manage, not to do… if they were to see a Maven build where it has not been micromanaged by the developers, then a different view they will form.
+* Being a good manager does not mean you will like Maven… for example if all your developers (who love to micromanage and thankfully are not managers because of their micromanagement adoration) tell you that Maven is a pain… well a good manager will hear what their team is saying and take it on board… after all they are there to manage, not to do… if they were to see a Maven build where it has not been micromanaged by the developers, then a different view they will form.

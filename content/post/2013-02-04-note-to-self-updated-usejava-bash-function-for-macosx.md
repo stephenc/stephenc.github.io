@@ -1,6 +1,6 @@
 ---
 title: "Note to self: Updated usejava BASH function for MacOSX"
-date: 2013-02-01T00:00:00Z
+date: 2013-02-04T00:00:00Z
 tags: ["Shell"]
 ---
 
