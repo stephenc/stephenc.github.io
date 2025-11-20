@@ -1,0 +1,248 @@
+<!doctype html><html lang=en-gb><head><meta charset=utf-8><meta name=viewport content="width=device-width"><script type=application/javascript src=https://stephenc.github.io/js/theme-mode.js></script><link rel=stylesheet href=https://stephenc.github.io/css/frameworks.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github-style.css><link rel=stylesheet href=https://stephenc.github.io/css/light.css><link rel=stylesheet href=https://stephenc.github.io/css/dark.css><link rel=stylesheet href=https://stephenc.github.io/css/syntax.css><title>Review Board and Subversion Hooks - Stephen's technical blog</title><link rel=icon type=image/x-icon href=https://stephenc.github.io/images/favicon.ico><meta name=theme-color content="#1e2327"><meta name=description content="Review Board is quite nice&mldr; it has a handy program for posting reviews (postreview)&mldr; and you can integrate this into your subversion hook scripts quite nicely&mldr;
+But what if you want to automate submitting reviews on only parts of your code base&mldr;
+What I want is to be able to set a property on a folder and then any time a file is changed in that folder or it&rsquo;s children, then a review will automatically be scheduled&mldr;
+"><meta name=keywords content='blog'><meta name=robots content="noodp"><link rel=canonical href=https://stephenc.github.io/post/2010-02-17-review-board-and-subversion-hooks/><meta name=twitter:card content="summary"><meta name=twitter:title content="Review Board and Subversion Hooks - Stephen's technical blog"><meta name=twitter:description content="Review Board is quite nice&mldr; it has a handy program for posting reviews (postreview)&mldr; and you can integrate this into your subversion hook scripts quite nicely&mldr;
+But what if you want to automate submitting reviews on only parts of your code base&mldr;
+What I want is to be able to set a property on a folder and then any time a file is changed in that folder or it&rsquo;s children, then a review will automatically be scheduled&mldr;
+"><meta name=twitter:site content="https://stephenc.github.io/"><meta name=twitter:creator content><meta name=twitter:image content="https://stephenc.github.io/"><meta property="og:type" content="article"><meta property="og:title" content="Review Board and Subversion Hooks - Stephen's technical blog"><meta property="og:description" content="Review Board is quite nice&mldr; it has a handy program for posting reviews (postreview)&mldr; and you can integrate this into your subversion hook scripts quite nicely&mldr;
+But what if you want to automate submitting reviews on only parts of your code base&mldr;
+What I want is to be able to set a property on a folder and then any time a file is changed in that folder or it&rsquo;s children, then a review will automatically be scheduled&mldr;
+"><meta property="og:url" content="https://stephenc.github.io/post/2010-02-17-review-board-and-subversion-hooks/"><meta property="og:site_name" content="Review Board and Subversion Hooks"><meta property="og:image" content="https://stephenc.github.io/"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><meta property="article:published_time" content="2010-02-17 00:00:00 +0000 UTC"></head><body><div style=position:relative><header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on"><div class="Header-item mobile-none" style=margin-top:-4px;margin-bottom:-4px><a class=Header-link href=https://stephenc.github.io/><img class=octicon height=32 width=32 src=/images/top-icon.png></a></div><div class="Header-item d-md-none"><button class="Header-link btn-link js-details-target" type=button onclick='document.querySelector("#header-search").style.display=document.querySelector("#header-search").style.display=="none"?"block":"none"'>
+<svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" width="24"><path fill-rule="evenodd" d="M1 2.75A.75.75.0 011.75 2h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 2.75zm0 5A.75.75.0 011.75 7h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 7.75zM1.75 12a.75.75.0 100 1.5h12.5a.75.75.0 100-1.5H1.75z"/></svg></button></div><div style=display:none id=header-search class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex"><div class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to"><div class=position-relative><form target=_blank id=search-form accept-charset=UTF-8 method=get autocomplete=off><label class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center"><input type=text class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable" name=q placeholder=Search autocomplete=off></label></form></div></div></div><div class="Header-item Header-item--full flex-justify-center d-md-none position-relative"><a class=Header-link href=https://stephenc.github.io/><img class="octicon octicon-mark-github v-align-middle" height=32 width=32 src=/images/top-icon.png></a></div><div class=Header-item style=margin-right:0><a href=javascript:void(0) class="Header-link no-select" onclick=switchTheme()><svg style="fill:var(--color-profile-color-modes-toggle-moon)" class="no-select" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.52208 7.71754c3.05612.0 5.53362-2.47748 5.53362-5.5336C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961 9.95801 1.07727 10.3495.771159 10.6474.99992c1.4679 1.12724 2.4141 2.90007 2.4141 4.89391.0 3.40575-2.7609 6.16667-6.16665 6.16667-2.94151.0-5.40199-2.0595-6.018122-4.81523C.794841 6.87902 1.23668 6.65289 1.55321 6.85451 2.41106 7.40095 3.4296 7.71754 4.52208 7.71754z"/></svg></a></div></header></div><div id=search-result class="container-lg px-3 new-discussion-timeline" style=display:none></div><div class=application-main><div><main><div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4"><div class=px-0><div class="mb-3 d-flex px-3 px-md-3 px-lg-5"><div class="flex-auto min-width-0 width-fit mr-3"><div class=d-flex><div class="d-none d-md-block"><a class="avatar mr-2 flex-shrink-0" href=https://stephenc.github.io/><img class=avatar-user src=/images/avatar.jpg width=32 height=32></a></div><div class="d-flex flex-column"><h1 class="break-word f3 text-normal mb-md-0 mb-1"><span class=author><a href=https://stephenc.github.io/>Stephen Connolly</a>
+</span><span class=path-divider>/</span>
+<strong class="css-truncate css-truncate-target mr-1" style=max-width:410px><a href=https://stephenc.github.io/post/2010-02-17-review-board-and-subversion-hooks/>Review Board and Subversion Hooks</a></strong></h1><div class="note m-0">Created <relative-time datetime="Wed, 17 Feb 2010 00:00:00 +0000" class=no-wrap>Wed, 17 Feb 2010 00:00:00 +0000</relative-time>
+<span class=file-info-divider></span>
+Modified <relative-time datetime="Wed, 17 Feb 2010 00:00:00 +0000" class=no-wrap>Wed, 17 Feb 2010 00:00:00 +0000</relative-time></div></div></div></div></div></div></div><div class="container-lg px-3 new-discussion-timeline"><div class="repository-content gist-content"><div><div class="js-gist-file-update-container js-task-list-container file-box"><div id=file-pytest class="file my-2"><div id=post-header class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style=z-index:2><div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto"><div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0"><summary id=toc-toggle onclick=clickToc() class="btn btn-octicon m-0 mr-2 p-2"><svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered"><path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zM3 8A1 1 0 111 8a1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"/></svg></summary><details-menu class=SelectMenu id=toc-details style="display: none;"><div class="SelectMenu-modal rounded-3 mt-1" style=max-height:340px><div class="SelectMenu-list SelectMenu-list--borderless p-2" style=overscroll-behavior:contain id=toc-list></div></div></details-menu>1212 Words</div><div class="file-actions flex-order-2 pt-0"></div></div></div><div class="Box-body px-5 pb-5" style=z-index:1><article class="markdown-body entry-content container-lg"><p><a href=http://www.reviewboard.org/>Review Board</a> is quite nice&mldr; it has a handy program for posting reviews (<a href=http://www.reviewboard.org/docs/manual/1.0/users/tools/post-review/>postreview</a>)&mldr; and you can integrate this into your <a href=http://subversion.apache.org/>subversion</a> hook scripts quite nicely&mldr;</p><p>But what if you want to automate submitting reviews on only parts of your code base&mldr;</p><p>What I want is to be able to set a property on a folder and then any time a file is changed in that folder or it&rsquo;s children, then a review will automatically be scheduled&mldr;</p><p>So I wrote the following C/C++ helper (because we would potentially be forking a lot of svnlook processes) which checks to see if a property is set on any of the changed paths or the changed path parents.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Licensed to the Apache Software Foundation (ASF) under one
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * or more contributor license agreements.  See the NOTICE file
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * distributed with this work for additional information
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * regarding copyright ownership.  The ASF licenses this file
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * to you under the Apache License, Version 2.0 (the
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &#34;License&#34;); you may not use this file except in compliance
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * with the License.  You may obtain a copy of the License at
+</span></span></span><span style=display:flex><span><span style=color:#75715e> *
+</span></span></span><span style=display:flex><span><span style=color:#75715e> *   http://www.apache.org/licenses/LICENSE-2.0
+</span></span></span><span style=display:flex><span><span style=color:#75715e> *
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Unless required by applicable law or agreed to in writing,
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * software distributed under the License is distributed on an
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * KIND, either express or implied.  See the License for the
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * specific language governing permissions and limitations
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * under the License.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdio.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;string.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdlib.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;unistd.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;sys/types.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;sys/wait.h&gt;</span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Returns a stream for the output of dirs-changed from svnlook.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span>FILE <span style=color:#f92672>*</span><span style=color:#a6e22e>svnlook_dirs_changed</span>(<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>svnlook, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>repo, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>rev) {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>cmd;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  cmd <span style=color:#f92672>=</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) <span style=color:#a6e22e>malloc</span>(<span style=color:#a6e22e>strlen</span>(svnlook) <span style=color:#f92672>+</span> <span style=color:#a6e22e>strlen</span>(<span style=color:#e6db74>&#34; dirs-changed &#34;</span>) <span style=color:#f92672>+</span> <span style=color:#a6e22e>strlen</span>(repo) <span style=color:#f92672>+</span> <span style=color:#a6e22e>strlen</span>(<span style=color:#e6db74>&#34; -r &#34;</span>) <span style=color:#f92672>+</span> <span style=color:#a6e22e>strlen</span>(rev) <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcpy</span>(cmd, svnlook);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcat</span>(cmd, <span style=color:#e6db74>&#34; dirs-changed &#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcat</span>(cmd, repo);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcat</span>(cmd, <span style=color:#e6db74>&#34; -r &#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcat</span>(cmd, rev);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> (FILE <span style=color:#f92672>*</span>) <span style=color:#a6e22e>popen</span>(cmd, <span style=color:#e6db74>&#34;r&#34;</span>);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Uses svnlook to check and see if the specified property is set on the specified path in the specified repository.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>svnlook_is_prop_set</span>(<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>svnlook, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>repopath, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>propname, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>path) {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> status;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>pid_t</span> pid;
+</span></span><span style=display:flex><span>  pid <span style=color:#f92672>=</span> <span style=color:#a6e22e>fork</span>();
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> (pid <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>fclose</span>(stdin);
+</span></span><span style=display:flex><span>    FILE <span style=color:#f92672>*</span>fp <span style=color:#f92672>=</span> <span style=color:#a6e22e>fopen</span>(<span style=color:#e6db74>&#34;/dev/null&#34;</span>, <span style=color:#e6db74>&#34;w+&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>fileno</span>(fp) <span style=color:#f92672>!=</span> STDIN_FILENO) {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>_exit</span>(EXIT_FAILURE);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>dup2</span>(STDIN_FILENO, STDOUT_FILENO) <span style=color:#f92672>==</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>) {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>_exit</span>(EXIT_FAILURE);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>dup2</span>(STDIN_FILENO, STDERR_FILENO) <span style=color:#f92672>==</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>) {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>_exit</span>(EXIT_FAILURE);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>execl</span>(svnlook, svnlook, <span style=color:#e6db74>&#34;pg&#34;</span>, repopath, propname, path, NULL);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;exit failure</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>_exit</span>(EXIT_FAILURE);
+</span></span><span style=display:flex><span>  } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (pid <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>    status <span style=color:#f92672>=</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>  } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>waitpid</span>(pid, <span style=color:#f92672>&amp;</span> status, <span style=color:#ae81ff>0</span>) <span style=color:#f92672>!=</span> pid) {
+</span></span><span style=display:flex><span>      status <span style=color:#f92672>=</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> status;
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Checks to see if any of the directories from the stream have the specified property set.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>check_svn_dirs</span>(FILE <span style=color:#f92672>*</span>fdirschanged, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>svnlook, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>repopath, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>revnum, <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>propname, <span style=color:#66d9ef>int</span> showallpaths) {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> line[<span style=color:#ae81ff>1024</span>];
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> rv <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>while</span> (<span style=color:#a6e22e>fgets</span>(line, <span style=color:#66d9ef>sizeof</span> line, fdirschanged)) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; i <span style=color:#f92672>&lt;</span> <span style=color:#66d9ef>sizeof</span> line; i<span style=color:#f92672>++</span>) {
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> (line[i] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;\n&#39;</span>) {
+</span></span><span style=display:flex><span>        line[i] <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> j <span style=color:#f92672>=</span> i; j <span style=color:#f92672>&gt;</span> <span style=color:#ae81ff>0</span>; j<span style=color:#f92672>--</span>) {
+</span></span><span style=display:flex><span>          <span style=color:#66d9ef>if</span> (line[j] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;/&#39;</span>) {
+</span></span><span style=display:flex><span>            line[j] <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (<span style=color:#ae81ff>0</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>svnlook_is_prop_set</span>(svnlook, repopath, propname, line)) {
+</span></span><span style=display:flex><span>              <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;%s/</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>, line);
+</span></span><span style=display:flex><span>              <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>showallpaths) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>              } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>                rv <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>              }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>          }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        line[<span style=color:#ae81ff>0</span>] <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#ae81ff>0</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>svnlook_is_prop_set</span>(svnlook, repopath, propname, line)) {
+</span></span><span style=display:flex><span>          <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;/</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>          <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>showallpaths) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>          } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            rv <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>          }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>      } <span style=color:#75715e>// else it&#39;s a really long path and I&#39;m refusing to check it!
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    }
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> rv;
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>main</span>(<span style=color:#66d9ef>int</span> argc, <span style=color:#66d9ef>char</span> <span style=color:#f92672>**</span>argv) {
+</span></span><span style=display:flex><span>  FILE <span style=color:#f92672>*</span>fpipe;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>svnlook <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;/usr/bin/svnlook&#34;</span>;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>repopath <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;..&#34;</span>;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>revnum <span style=color:#f92672>=</span> NULL;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>propname <span style=color:#f92672>=</span> NULL;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> showallpaths <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> index <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> help <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>while</span> (index <span style=color:#f92672>&lt;</span> argc) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;--svn-look&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>      index<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> (index <span style=color:#f92672>&lt;</span> argc) {
+</span></span><span style=display:flex><span>        svnlook <span style=color:#f92672>=</span> argv[index];
+</span></span><span style=display:flex><span>      } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>        help <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;-r&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>      index<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> (index <span style=color:#f92672>&lt;</span> argc) {
+</span></span><span style=display:flex><span>        revnum <span style=color:#f92672>=</span> argv[index];
+</span></span><span style=display:flex><span>      } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>        help <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;--repo&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>      index<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> (index <span style=color:#f92672>&lt;</span> argc) {
+</span></span><span style=display:flex><span>        repopath <span style=color:#f92672>=</span> argv[index];
+</span></span><span style=display:flex><span>      } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>        help <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;--property&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>      index<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> (index <span style=color:#f92672>&lt;</span> argc) {
+</span></span><span style=display:flex><span>        propname <span style=color:#f92672>=</span> argv[index];
+</span></span><span style=display:flex><span>      } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>        help <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;--show-all-paths&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>      showallpaths <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;--help&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;-h&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>strcmp</span>(<span style=color:#e6db74>&#34;-?&#34;</span>, argv[index]) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>      help <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>      help <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    index<span style=color:#f92672>++</span>;
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> (help <span style=color:#f92672>||</span> svnlook <span style=color:#f92672>==</span> NULL <span style=color:#f92672>||</span> repopath <span style=color:#f92672>==</span> NULL <span style=color:#f92672>||</span> revnum <span style=color:#f92672>==</span> NULL <span style=color:#f92672>||</span> propname <span style=color:#f92672>==</span> NULL) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Syntax: %s options</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>, argv[<span style=color:#ae81ff>0</span>]);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Options:</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;    --svn-look PATH     Specify an alternative svnlook binary location (default /usr/bin/svnlook)</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;    --repo PATH         Specify the repository to work against (required)</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;    -r REVNUM           Specify the revision to process (required)</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;    -property NAME      Specify the property to check (required)</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;    --show-all-paths    Shows all the changed paths with the property rather than just the first (optional)</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>2</span>;
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> rv <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>  fpipe <span style=color:#f92672>=</span> <span style=color:#a6e22e>svnlook_dirs_changed</span>(svnlook, repopath, revnum);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> (fpipe) {
+</span></span><span style=display:flex><span>    rv <span style=color:#f92672>=</span> <span style=color:#a6e22e>check_svn_dirs</span>(fpipe, svnlook, repopath, revnum, propname, showallpaths);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>pclose</span>(fpipe);
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> rv;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Now I should warn you that it&rsquo;s a wee while since I wrote C/C++, so apologies if the above is not perfect&mldr; it works for me.</p><p>Next I use a <code>post-commit.sh</code> script to check for my property:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span><span style=color:#75715e>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Licensed to the Apache Software Foundation (ASF) under one</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># or more contributor license agreements.  See the NOTICE file</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># distributed with this work for additional information</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># regarding copyright ownership.  The ASF licenses this file</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># to you under the Apache License, Version 2.0 (the</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># &#34;License&#34;); you may not use this file except in compliance</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># with the License.  You may obtain a copy of the License at</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#   http://www.apache.org/licenses/LICENSE-2.0</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Unless required by applicable law or agreed to in writing,</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># software distributed under the License is distributed on an</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># KIND, either express or implied.  See the License for the</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># specific language governing permissions and limitations</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># under the License.</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>path<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>/usr/bin/svnlook props --repo <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> -r $2 --property reviewboard:autoreview<span style=color:#66d9ef>)</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> $? <span style=color:#f92672>==</span> <span style=color:#ae81ff>1</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> <span style=color:#66d9ef>$(</span>svnlook changed <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> -r $2 | sed -e <span style=color:#e6db74>&#34;/^_.*/d;&#34;</span> | wc -l<span style=color:#66d9ef>)</span> -eq <span style=color:#ae81ff>0</span> <span style=color:#f92672>]</span> ; <span style=color:#66d9ef>then</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e># Commit does not contain changed files, only changed properties</span>
+</span></span><span style=display:flex><span>        exit <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fi</span>
+</span></span><span style=display:flex><span>    people<span style=color:#f92672>=</span><span style=color:#66d9ef>$(for</span> p in <span style=color:#66d9ef>$(</span>/usr/bin/svnlook props --repo <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> -r $2 --property reviewboard:autoreview --show-all-paths<span style=color:#66d9ef>)</span>; <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>            <span style=color:#66d9ef>do</span> /usr/bin/svnlook pg <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> reviewboard:autoreview <span style=color:#e6db74>&#34;</span>$p<span style=color:#e6db74>&#34;</span>; echo <span style=color:#e6db74>&#34;&#34;</span>; <span style=color:#66d9ef>done</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>            | sed -e <span style=color:#e6db74>&#39;s/[, \t]/\n/g;&#39;</span> | sort -u | tr <span style=color:#e6db74>&#39;\n&#39;</span> <span style=color:#e6db74>&#39;,&#39;</span> | sed -e <span style=color:#e6db74>&#34;s/,</span>$<span style=color:#e6db74>//;&#34;</span><span style=color:#66d9ef>)</span>
+</span></span><span style=display:flex><span>    post-review --server<span style=color:#f92672>=</span>... --username<span style=color:#f92672>=</span>... --password<span style=color:#f92672>=</span>... --submit-as<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>/usr/bin/svnlook author <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;</span>$2<span style=color:#e6db74>&#34;</span><span style=color:#66d9ef>)</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>        --repository-url<span style=color:#f92672>=</span>... --revision-range<span style=color:#f92672>=</span><span style=color:#66d9ef>$((</span>$2<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span><span style=color:#66d9ef>))</span>:$2 <span style=color:#e6db74>&#34;--description=</span><span style=color:#66d9ef>$(</span>/usr/bin/svnlook log <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> -r <span style=color:#e6db74>&#34;</span>$2<span style=color:#e6db74>&#34;</span><span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>        <span style=color:#e6db74>&#34;--summary=Commit r</span>$2<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;--target-people=</span>$people<span style=color:#e6db74>&#34;</span> --publish
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fi</span>
+</span></span><span style=display:flex><span>exit <span style=color:#ae81ff>0</span>
+</span></span></code></pre></div><p>And now, as if by magic, all I need to do is set the property <code>reviewboard:autoreview</code> to the list of reviewboard usernames to be reviewers and then any time there is a commit on the folder with the property set, a review is automagically scheduled.</p><p>Lovely&mldr;</p><p>Now all I need to do is tone down how often reviewboard sends emails!</p></article></div></div></div></div></div></div></main></div><script type=application/javascript src=https://stephenc.github.io/js/toc.js></script><link rel=stylesheet href=https://stephenc.github.io/css/toc.css></div><footer style="text-align:center;padding:20px;border-top:1px solid #eee;margin-top:40px"><p style=margin:0;color:#666;font-size:14px>© 2025 Stephen Connolly
+| <a href=# onclick="return resetCookieConsent(),!1" style=color:#666;text-decoration:underline>Cookie Settings</a></p></footer><div id=cookie-consent-banner style="display:none;position:fixed;bottom:0;left:0;right:0;background:#333;color:#fff;padding:15px;text-align:center;z-index:9999;box-shadow:0 -2px 10px rgba(0,0,0,.3)"><div style="max-width:1200px;margin:0 auto"><p style="margin:0 0 10px;font-size:14px">This website uses Google Analytics to help analyze how visitors use this site. By continuing to browse this site, you agree to this use.
+<a href=# style=color:#4caf50;text-decoration:underline onclick="return showCookieDetails(),!1">Learn more</a></p><div><button onclick=acceptCookies() style="background:#4caf50;color:#fff;border:none;padding:8px 16px;margin:0 5px;cursor:pointer;border-radius:4px">Accept</button>
+<button onclick=declineCookies() style="background:#f44336;color:#fff;border:none;padding:8px 16px;margin:0 5px;cursor:pointer;border-radius:4px">Decline</button></div></div></div><div id=cookie-details-modal style=display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000><div style=position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border-radius:8px;max-width:500px;width:90%><h3 style=margin-top:0>Cookie Information</h3><p>This website uses Google Analytics, which uses cookies to collect anonymous information about how visitors use this site. This information is used to improve the website experience.</p><p><strong>What data is collected:</strong></p><ul><li>Pages visited and time spent on pages</li><li>How you arrived at the site</li><li>General location (country/city level)</li><li>Device and browser information</li></ul><p>No personally identifiable information is collected. You can opt out at any time by declining cookies.</p><button onclick=hideCookieDetails() style="background:#2196f3;color:#fff;border:none;padding:8px 16px;cursor:pointer;border-radius:4px">Close</button></div></div><script>function getCookieConsent(){return localStorage.getItem("cookieConsent")}function setCookieConsent(e){localStorage.setItem("cookieConsent",e)}function loadGoogleAnalytics(){var t,e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-CEQZZXVE7Q",document.head.appendChild(e),t=document.createElement("script"),t.innerHTML=`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-CEQZZXVE7Q', {
+        anonymize_ip: true,
+        cookie_flags: 'SameSite=None;Secure'
+      });
+    `,document.head.appendChild(t)}function acceptCookies(){setCookieConsent("accepted"),document.getElementById("cookie-consent-banner").style.display="none",loadGoogleAnalytics()}function declineCookies(){setCookieConsent("declined"),document.getElementById("cookie-consent-banner").style.display="none"}function showCookieDetails(){document.getElementById("cookie-details-modal").style.display="block"}function hideCookieDetails(){document.getElementById("cookie-details-modal").style.display="none"}function resetCookieConsent(){localStorage.removeItem("cookieConsent"),document.getElementById("cookie-consent-banner").style.display="block"}document.addEventListener("DOMContentLoaded",function(){var e=getCookieConsent();e==="accepted"?loadGoogleAnalytics():e==="declined"||(document.getElementById("cookie-consent-banner").style.display="block")})</script></body><script type=application/javascript src=https://stephenc.github.io/js/github-style.js></script><script src=https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js></script><script type=application/javascript src=https://stephenc.github.io/js/search.js></script></html>
