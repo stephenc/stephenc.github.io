@@ -1,9 +1,9 @@
 ---
 title: "3D TV, level headed people will say it looks fine, looks bad lying  down"
-date: 2010-07-01T00:00:00Z
+date: 2010-07-26T00:00:00Z
 ---
 
-I had my first oportunity to see the new 3D TV's this weekend.  They looked OK to me.  There was a 3D effect.  All around me were people who were going "wow! this is great! this is absolutely fantastic!".
+I had my first oportunity to see the new 3D TV's this weekend.  They looked OK to me.  There was a 3D effect.  All around me were people who were going "wow! this is great! this is absolutely fantastic!".
 
 But then I tilted my head, and low and behold, because the system uses horizontal separation to deliver 3D, it requires that your eyes be horizontally separated in order to deliver the 3D effect... when your eyes are vertical, however, it looks just as shit as when you have not got the glasses on.
 

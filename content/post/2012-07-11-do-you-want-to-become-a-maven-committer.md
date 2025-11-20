@@ -80,13 +80,13 @@ If you are certain that your patch is a good patch, and a week has passed with n
 
 ## Stephen, Arnaud & Barrie's school for potential Maven committers
 
-To help people who are interested in becoming Maven committers fulfill their goals, myself, Arnaud Heritier and Barrie Treloar (along with any other current Maven committers who decide to help) will be running an assignment based class to help people become committers.
+To help people who are interested in becoming Maven committers fulfill their goals, myself, Arnaud Heritier and Barrie Treloar (along with any other current Maven committers who decide to help) will be running an assignment based class to help people become committers.
 
 To register for the class you need to complete the following steps:
 
 1. Read the Apache Individual Contributor License Agreement. When you graduate from the class you will be required to sign this in order to become a committer.
 
-2. Subscribe to the dev@maven.apache.org mailing list.
+2. Subscribe to the dev@maven.apache.org mailing list.
 
 3. Send an email to the list with the Subject line: 
     ```

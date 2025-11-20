@@ -9,7 +9,7 @@ In fact here is one such screenshot:
 
 ![](/images/post/2011-10-19-screenshot.png)
 
-Notice the nice shadow effect around the screenshot? Ever wanted to add that shadow effect to your non-mac screenshots?
+Notice the nice shadow effect around the screenshot? Ever wanted to add that shadow effect to your non-mac screenshots?
 
 ImageMagick is your friend
 
@@ -27,7 +27,7 @@ To remove from existing screenshots?
 ImageMagick is your friend again
 
 ```sh
-convert WithShadowScreenshot.png -crop +40+25 -crop -40-55 WithoutShadowScreenshot.png
+convert WithShadowScreenshot.png -crop +40+25 -crop -40-55 WithoutShadowScreenshot.png
 ```
 
 If you get sick of doing that all the time, you can just disable it.

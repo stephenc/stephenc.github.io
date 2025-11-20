@@ -50,7 +50,7 @@ Different Open Source projects but different barriers at different points. For e
 > [!NOTE]
 > I'm not going to even try and pretend that the above is a complete list of road-blocks
 
-Different people view success of Open Source projects differently. Some measures of success include: the number of consumers;  the number of active contributors; the number of committers; the number of releases; the number of downloads; the number of issues raised and closed; the activity of mailing lists.
+Different people view success of Open Source projects differently. Some measures of success include: the number of consumers;  the number of active contributors; the number of committers; the number of releases; the number of downloads; the number of issues raised and closed; the activity of mailing lists.
 
 None of these are correct, and much like psychologists hypothesize a (in reality) unmeasurable [“g factor”](http://en.wikipedia.org/wiki/G_factor_(psychometrics)) as a true measure of intelligence against which all real measures (such as IQ) are only partial measures. We could hypothesize an unmeasurable “s factor” which is the true measure of the success of an Open Source project.
 
@@ -124,7 +124,7 @@ Once we realize that commit access is about trust and not merit, then we can rea
 
 So what I am arguing is that if somebody shows up knocking at the door of your project looking to contribute, at some point you have to trust them enough to open the door and let them in. It's fine if you have a few hurdles that they have to jump, but remember that at the end of the day you are trying to decided if you trust them enough to let them make changes to the code, or to put it another way, if you trust them to make good judgements on the merit of any changes they want to commit.
 
-> Your merit as a committer is not the merit of the code changes you have committed, but all the code changes you did not commit because those changes had no merit.
+> Your merit as a committer is not the merit of the code changes you have committed, but all the code changes you did not commit because those changes had no merit.
 
 A good committer is somebody who does not make changes that are bad. The ideal committer only makes commits that improve the project. Joe might be the ideal committer for your project even though he has never submitted a patch because Joe knows when a patch is improving the project and when it is not, but because Joe has never submitted a patch, he has earned no merit in your projects eyes, so he will never become a committer.
 

@@ -10,7 +10,7 @@ ELResolvers are where you get to extend the new unified EL for your own pages. T
 3. Add an `<el-resolver>` element to your `<application>` section in `faces-config.xml`
 4. Start using your resolver!  
 
-OK, so why would you want to do this? Well, for one it can make some things a lot easier. I was driven to find this solution in order to dynamically generate h:dataTables with variable numbers of columns.  Ordinarily you would need to bind the h:dataTable to a backing bean and have the backing bean add in the extra columns, but with `c:forEach` now being compatible with JSF, we have an alternative.  
+OK, so why would you want to do this? Well, for one it can make some things a lot easier. I was driven to find this solution in order to dynamically generate h:dataTables with variable numbers of columns.  Ordinarily you would need to bind the h:dataTable to a backing bean and have the backing bean add in the extra columns, but with `c:forEach` now being compatible with JSF, we have an alternative.  
 
 Here's the model of the data we are trying to present: (the classes are coming from EJB entities which are mapping to a legacy database)
 

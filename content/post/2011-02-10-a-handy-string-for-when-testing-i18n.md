@@ -1,21 +1,21 @@
 ---
 title: "A handy string for when testing i18n"
-date: 2011-02-01T00:00:00Z
+date: 2011-02-10T00:00:00Z
 ---
 
 Here's a handy string for i18n testing:
 
-用户汉语
+> 用户汉语
 
 It can be handy to have a string in a non-english charater set that can be pushed end-to-end.
 
 This should be a sad sad joke similar to the writing on the bottom of a leprechaun I saw in a gift shop in Ennis:
 
-Déanta i dtír eile
+> Déanta i dtír eile
 
 I should point out that it was probably
 
-Déanta sa tSín
+> Déanta sa tSín
 
 Still
 

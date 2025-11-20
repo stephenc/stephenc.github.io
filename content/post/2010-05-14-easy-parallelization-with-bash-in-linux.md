@@ -1,6 +1,6 @@
 ---
 title: "Easy parallelization with Bash in Linux"
-date: 2010-05-01T00:00:00Z
+date: 2010-05-14T00:00:00Z
 tags: ["Shell"]
 ---
 
