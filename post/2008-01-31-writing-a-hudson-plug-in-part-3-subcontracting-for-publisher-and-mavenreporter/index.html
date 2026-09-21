@@ -1,0 +1,320 @@
+<!doctype html><html lang=en-gb><head><meta charset=utf-8><meta name=viewport content="width=device-width"><script type=application/javascript src=https://stephenc.github.io/js/theme-mode.js></script><link rel=stylesheet href=https://stephenc.github.io/css/frameworks.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github-style.css><link rel=stylesheet href=https://stephenc.github.io/css/light.css><link rel=stylesheet href=https://stephenc.github.io/css/dark.css><link rel=stylesheet href=https://stephenc.github.io/css/syntax.css><title>Writing a Hudson plug-in (Part 3 – Subcontracting for Publisher and MavenReporter) - Stephen's technical blog</title><link rel=icon type=image/x-icon href=https://stephenc.github.io/images/favicon.ico><meta name=theme-color content="#1e2327"><meta name=description content="In this, the third installment, I will introduce some helper classes that we can use to let Publisher and MavenReporter subcontract the job of creating the build reports. Firstly, we have the Ghostwriter interface. An implementation of a Ghostwriter is the work-horse that writes the build report. Secondly, we have the BuildProxy class. This class is a more general MavenBuildProxy that works for both Maven builds and non-Maven builds. In part 4 we will tie these helpers into the Hudson plugin framework with an AbstractMavenReporterImpl and AbstractPublisherImpl from which we can extend our plugin&rsquo;s MavenReporter and Publisher.
+"><meta name=keywords content='blog'><meta name=robots content="noodp"><link rel=canonical href=https://stephenc.github.io/post/2008-01-31-writing-a-hudson-plug-in-part-3-subcontracting-for-publisher-and-mavenreporter/><meta name=twitter:card content="summary"><meta name=twitter:title content="Writing a Hudson plug-in (Part 3 – Subcontracting for Publisher and MavenReporter) - Stephen's technical blog"><meta name=twitter:description content="In this, the third installment, I will introduce some helper classes that we can use to let Publisher and MavenReporter subcontract the job of creating the build reports. Firstly, we have the Ghostwriter interface. An implementation of a Ghostwriter is the work-horse that writes the build report. Secondly, we have the BuildProxy class. This class is a more general MavenBuildProxy that works for both Maven builds and non-Maven builds. In part 4 we will tie these helpers into the Hudson plugin framework with an AbstractMavenReporterImpl and AbstractPublisherImpl from which we can extend our plugin&rsquo;s MavenReporter and Publisher.
+"><meta name=twitter:site content="https://stephenc.github.io/"><meta name=twitter:creator content><meta name=twitter:image content="https://stephenc.github.io/"><meta property="og:type" content="article"><meta property="og:title" content="Writing a Hudson plug-in (Part 3 – Subcontracting for Publisher and MavenReporter) - Stephen's technical blog"><meta property="og:description" content="In this, the third installment, I will introduce some helper classes that we can use to let Publisher and MavenReporter subcontract the job of creating the build reports. Firstly, we have the Ghostwriter interface. An implementation of a Ghostwriter is the work-horse that writes the build report. Secondly, we have the BuildProxy class. This class is a more general MavenBuildProxy that works for both Maven builds and non-Maven builds. In part 4 we will tie these helpers into the Hudson plugin framework with an AbstractMavenReporterImpl and AbstractPublisherImpl from which we can extend our plugin&rsquo;s MavenReporter and Publisher.
+"><meta property="og:url" content="https://stephenc.github.io/post/2008-01-31-writing-a-hudson-plug-in-part-3-subcontracting-for-publisher-and-mavenreporter/"><meta property="og:site_name" content="Writing a Hudson plug-in (Part 3 – Subcontracting for Publisher and MavenReporter)"><meta property="og:image" content="https://stephenc.github.io/"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><meta property="article:published_time" content="2008-01-31 00:00:00 +0000 UTC"></head><body><div style=position:relative><header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on"><div class="Header-item mobile-none" style=margin-top:-4px;margin-bottom:-4px><a class=Header-link href=https://stephenc.github.io/><img class=octicon height=32 width=32 src=/images/top-icon.png></a></div><div class="Header-item d-md-none"><button class="Header-link btn-link js-details-target" type=button onclick='document.querySelector("#header-search").style.display=document.querySelector("#header-search").style.display=="none"?"block":"none"'>
+<svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" width="24"><path fill-rule="evenodd" d="M1 2.75A.75.75.0 011.75 2h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 2.75zm0 5A.75.75.0 011.75 7h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 7.75zM1.75 12a.75.75.0 100 1.5h12.5a.75.75.0 100-1.5H1.75z"/></svg></button></div><div style=display:none id=header-search class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex"><div class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to"><div class=position-relative><form target=_blank id=search-form accept-charset=UTF-8 method=get autocomplete=off><label class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center"><input type=text class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable" name=q placeholder=Search autocomplete=off></label></form></div></div></div><div class="Header-item Header-item--full flex-justify-center d-md-none position-relative"><a class=Header-link href=https://stephenc.github.io/><img class="octicon octicon-mark-github v-align-middle" height=32 width=32 src=/images/top-icon.png></a></div><div class=Header-item style=margin-right:0><a href=javascript:void(0) class="Header-link no-select" onclick=switchTheme()><svg style="fill:var(--color-profile-color-modes-toggle-moon)" class="no-select" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.52208 7.71754c3.05612.0 5.53362-2.47748 5.53362-5.5336C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961 9.95801 1.07727 10.3495.771159 10.6474.99992c1.4679 1.12724 2.4141 2.90007 2.4141 4.89391.0 3.40575-2.7609 6.16667-6.16665 6.16667-2.94151.0-5.40199-2.0595-6.018122-4.81523C.794841 6.87902 1.23668 6.65289 1.55321 6.85451 2.41106 7.40095 3.4296 7.71754 4.52208 7.71754z"/></svg></a></div></header></div><div id=search-result class="container-lg px-3 new-discussion-timeline" style=display:none></div><div class=application-main><div><main><div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4"><div class=px-0><div class="mb-3 d-flex px-3 px-md-3 px-lg-5"><div class="flex-auto min-width-0 width-fit mr-3"><div class=d-flex><div class="d-none d-md-block"><a class="avatar mr-2 flex-shrink-0" href=https://stephenc.github.io/><img class=avatar-user src=/images/avatar.jpg width=32 height=32></a></div><div class="d-flex flex-column"><h1 class="break-word f3 text-normal mb-md-0 mb-1"><span class=author><a href=https://stephenc.github.io/>Stephen Connolly</a>
+</span><span class=path-divider>/</span>
+<strong class="css-truncate css-truncate-target mr-1" style=max-width:410px><a href=https://stephenc.github.io/post/2008-01-31-writing-a-hudson-plug-in-part-3-subcontracting-for-publisher-and-mavenreporter/>Writing a Hudson plug-in (Part 3 – Subcontracting for Publisher and MavenReporter)</a></strong></h1><div class="note m-0">Created <relative-time datetime="Thu, 31 Jan 2008 00:00:00 +0000" class=no-wrap>Thu, 31 Jan 2008 00:00:00 +0000</relative-time>
+<span class=file-info-divider></span>
+Modified <relative-time datetime="Thu, 31 Jan 2008 00:00:00 +0000" class=no-wrap>Thu, 31 Jan 2008 00:00:00 +0000</relative-time></div></div></div></div></div></div></div><div class="container-lg px-3 new-discussion-timeline"><div class="repository-content gist-content"><div><div class="js-gist-file-update-container js-task-list-container file-box"><div id=file-pytest class="file my-2"><div id=post-header class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style=z-index:2><div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto"><div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0"><summary id=toc-toggle onclick=clickToc() class="btn btn-octicon m-0 mr-2 p-2"><svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered"><path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zM3 8A1 1 0 111 8a1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"/></svg></summary><details-menu class=SelectMenu id=toc-details style="display: none;"><div class="SelectMenu-modal rounded-3 mt-1" style=max-height:340px><div class="SelectMenu-list SelectMenu-list--borderless p-2" style=overscroll-behavior:contain id=toc-list></div></div></details-menu>1917 Words</div><div class="file-actions flex-order-2 pt-0"><a class="muted-link mr-3" href=/tags/jenkins><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
+Jenkins</a></div></div></div><div class="Box-body px-5 pb-5" style=z-index:1><article class="markdown-body entry-content container-lg"><p>In this, the third installment, I will introduce some helper classes that we can use to let Publisher and MavenReporter subcontract the job of creating the build reports. Firstly, we have the Ghostwriter interface. An implementation of a Ghostwriter is the work-horse that writes the build report. Secondly, we have the BuildProxy class. This class is a more general MavenBuildProxy that works for both Maven builds and non-Maven builds. In part 4 we will tie these helpers into the Hudson plugin framework with an AbstractMavenReporterImpl and AbstractPublisherImpl from which we can extend our plugin&rsquo;s MavenReporter and Publisher.</p><p>The classes presented here and in part 4 should be generic enough that most plugins can be implemented on the back of them, hence my reason for making them this generic.</p><h2 id=ghostwriter>Ghostwriter</h2><p>A class or interface should be named after its function. PublisherDelegate, RealReporter, etc, just did not seem snappy enough, so I&rsquo;ve picked Ghostwriter, as I think it encapsulates the idea of actually doing the writing without the consumer knowing who did the work!</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.helpers;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.BuildListener;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.AbstractBuild;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.FilePath;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.Serializable;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.IOException;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>Ghostwriter</span> <span style=color:#66d9ef>extends</span> Serializable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>SlaveGhostwriter</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>extends</span> Ghostwriter {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>performFromSlave</span>(BuildProxy build,
+</span></span><span style=display:flex><span>                                 BuildListener listener)
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throws</span> InterruptedException, IOException;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>MasterGhostwriter</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>extends</span> Ghostwriter {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>performFromMaster</span>(AbstractBuild build,
+</span></span><span style=display:flex><span>                                  FilePath executionRoot,
+</span></span><span style=display:flex><span>                                  BuildListener listener)
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throws</span> InterruptedException, IOException;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This interface is really a marker interface for a class that implements at least one of <code>SlaveGhostwriter</code> and <code>MasterGhostwriter</code>. The idea between these two child interfaces is that they encapsulate execution on the slave or the master.</p><p>Let&rsquo;s look at <code>Ghostwriter.MasterGhostwriter</code> the method for performing our plugin&rsquo;s action receives three parameters:</p><ul><li>The build that this plugin is being executed on;</li><li>The file path location of the execution of the build (Note: this is a <code>FilePath</code> as the execution of the build is most likely remote from the master); and</li><li>The build listener where to allow us to add information to the build log</li></ul><p>These are mostly the same parameters as <code>hudson.tasks.BuildStep</code> provides in its perform method, however we have substituted a file path for a launcher. The logic here is that with the Maven project type, the root of the maven module needs to be passed back to the plugin, so we will need this file path information. With the Free-style project type, the root easily and unambiguously available from the <code>build</code> parameter. The exceptions that we declare are needed as this method could be being called from the slave via the remoting support built into Hudson.</p><p>If we now turn to <code>Ghostwriter.SlaveGhostwriter</code>. In this case, the perform method takes two parameters</p><ul><li>The build proxy, modelled after MavenBuildProxy, which contains the essential information required for our plugin; and</li><li>The build listener.</li></ul><p>The idea with both of these interfaces is that our plugin implementation does some work figuring out what our Ghostwriter is supposed to do. If we are in a Maven project, we can determine some of the information from the pom.xml and the rest from Hudson. If we are in any other type of project, we determine all the information from Hudson. We capture that configuration in a Ghostwriter instance, and we send the Ghostwriter off to do our work. The Ghostwriter then goes off to the slave or the master as necessary and does it&rsquo;s job. We have separated our concerns as we have:</p><ul><li>A publisher for determining the configuration for a freestyle project;</li><li>A maven reported for determine the configuration for a Maven2 project; and</li><li>A ghostwriter for getting the job done</li></ul><p>Now it is time to look at our next helper class</p><h2 id=buildproxy>BuildProxy</h2><p>This is our workhorse class, it is designed to hide the different execution paths to calling the <code>Ghostwriter</code> and ensuring that there are no differences (as far as the <code>Ghostwriter</code> is concerned) between the Free-style project type and the Maven2 project type. As I said earlier, it is modelled on <code>MavenBuildProxy</code>, so we have getters for the important directories on the Master that are needed on the Slave. For example, if we need to copy a file to the artifacts directory of the master, the build directory of the master, or the project directory of the master.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.helpers;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.FilePath;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.maven.MavenBuildProxy;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.util.IOException2;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.Action;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.Result;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.AbstractBuild;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.BuildListener;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.Calendar;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.List;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.ArrayList;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.IOException;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> org.apache.maven.project.MavenProject;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BuildProxy</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> FilePath artifactsDir;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> FilePath projectRootDir;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> FilePath buildRootDir;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> FilePath executionRootDir;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Calendar timestamp;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#a6e22e>BuildProxy</span>(FilePath artifactsDir,
+</span></span><span style=display:flex><span>                       FilePath projectRootDir,
+</span></span><span style=display:flex><span>                       FilePath buildRootDir,
+</span></span><span style=display:flex><span>                       FilePath executionRootDir,
+</span></span><span style=display:flex><span>                       Calendar timestamp) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>artifactsDir</span> <span style=color:#f92672>=</span> artifactsDir;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>projectRootDir</span> <span style=color:#f92672>=</span> projectRootDir;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>buildRootDir</span> <span style=color:#f92672>=</span> buildRootDir;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>executionRootDir</span> <span style=color:#f92672>=</span> executionRootDir;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>timestamp</span> <span style=color:#f92672>=</span> timestamp;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> FilePath <span style=color:#a6e22e>getArtifactsDir</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> artifactsDir;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> FilePath <span style=color:#a6e22e>getBuildRootDir</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> buildRootDir;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> FilePath <span style=color:#a6e22e>getExecutionRootDir</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> executionRootDir;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> FilePath <span style=color:#a6e22e>getProjectRootDir</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> projectRootDir;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Calendar <span style=color:#a6e22e>getTimestamp</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> timestamp;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>There are additional methods, but I want to outline the key function of <code>BuildProxy</code> before introducing them. Also, the constructor is <code>private</code> because we will use these additional methods it instantiate the BuildProxy for us.</p><p>In my experience, the primary information that a plugin needs to know (when executing on the slave) are the five pieces of information that are stored in <code>BuildProxy</code></p><ul><li>The artifacts directory - the directory on the master where artifacts for this project are to be stored;</li><li>The build root directory - the directory on the master where build reports for this build are to be stored;</li><li>The project root directory - the directory on the master where project reports are to be stored;</li><li>The timestamp when the build started - for example to identify new artifacts produced during the build; and finally</li><li>The execution root directory - the directory either on the slave or the master from which the build was performed</li></ul><p>Now, when our plugin is executing on the slave, it will need to pass back information to the real build. For example, if our plugin completes successfully, we will want to attach <code>Action</code> objects to the <code>AbstractBuild</code> in order to allow the user to see the results of our plugin on the build pages in Hudson. If there were problems when executing our plugin, we may want to fail the build, mark it as unstable, or stop any other plugins from executing. To handle these cases, we need to add some mutable properties to our <code>BuildProxy</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span>...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BuildProxy</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Action<span style=color:#f92672>&gt;</span> actions <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;</span>Action<span style=color:#f92672>&gt;</span>();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> Result result <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>boolean</span> continueBuild <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> List<span style=color:#f92672>&lt;</span>Action<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getActions</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> actions;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Result <span style=color:#a6e22e>getResult</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> result;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setResult</span>(Result result) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>result</span> <span style=color:#f92672>=</span> result;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>isContinueBuild</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> continueBuild;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setContinueBuild</span>(<span style=color:#66d9ef>boolean</span> continueBuild) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>continueBuild</span> <span style=color:#f92672>=</span> continueBuild;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So now our <code>Ghostwriter.SlaveGhostwriter</code> has the ability to:</p><ul><li>Add actions to the build;</li><li>Modify the result of the build; and</li><li>Flag that the build should finish as early as possible.</li></ul><p>At this point we are ready to introduce the static methods that will invoke the <code>Ghostwriter</code> for our <code>Publisher</code> or <code>MavenReporter</code>.</p><p>First off, we have a <code>doPerform</code> method designed to be called from a <code>Publisher</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span>...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BuildProxy</span> {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>doPerform</span>(Ghostwriter ghostwriter,
+</span></span><span style=display:flex><span>                                    AbstractBuild build,
+</span></span><span style=display:flex><span>                                    BuildListener listener)
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throws</span> IOException, InterruptedException {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// first, do we need to do anything on the slave</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (ghostwriter <span style=color:#66d9ef>instanceof</span> Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span>) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// construct the BuildProxy instance that we will use</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            BuildProxy buildProxy <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BuildProxy(
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>new</span> FilePath(build.<span style=color:#a6e22e>getArtifactsDir</span>()),
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>new</span> FilePath(build.<span style=color:#a6e22e>getProject</span>().<span style=color:#a6e22e>getRootDir</span>()),
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>new</span> FilePath(build.<span style=color:#a6e22e>getRootDir</span>()),
+</span></span><span style=display:flex><span>                    build.<span style=color:#a6e22e>getProject</span>().<span style=color:#a6e22e>getModuleRoot</span>(),
+</span></span><span style=display:flex><span>                    build.<span style=color:#a6e22e>getTimestamp</span>());
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            BuildProxyCallableHelper callableHelper <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>new</span> BuildProxyCallableHelper(buildProxy, ghostwriter, listener);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>                buildProxy <span style=color:#f92672>=</span> buildProxy.<span style=color:#a6e22e>getExecutionRootDir</span>().<span style=color:#a6e22e>act</span>(callableHelper);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                buildProxy.<span style=color:#a6e22e>updateBuild</span>(build);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#75715e>// terminate the build if necessary</span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>buildProxy.<span style=color:#a6e22e>isContinueBuild</span>()) {
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            } <span style=color:#66d9ef>catch</span> (Exception e) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throw</span> unwrapException(e, listener);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// finally, on to the master</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> Ghostwriter.<span style=color:#a6e22e>MasterGhostwriter</span> masterGhostwriter <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>            Ghostwriter.<span style=color:#a6e22e>MasterGhostwriter</span>.<span style=color:#a6e22e>class</span>.<span style=color:#a6e22e>cast</span>(ghostwriter);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> masterGhostwriter <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>||</span> masterGhostwriter.<span style=color:#a6e22e>performFromMaster</span>(build,
+</span></span><span style=display:flex><span>                        build.<span style=color:#a6e22e>getProject</span>().<span style=color:#a6e22e>getModuleRoot</span>(),
+</span></span><span style=display:flex><span>                        listener);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> RuntimeException <span style=color:#a6e22e>unwrapException</span>(Exception e,
+</span></span><span style=display:flex><span>                                                    BuildListener listener)
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throws</span> IOException, InterruptedException {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (e.<span style=color:#a6e22e>getCause</span>() <span style=color:#66d9ef>instanceof</span> IOException) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IOException2(e.<span style=color:#a6e22e>getCause</span>().<span style=color:#a6e22e>getMessage</span>(), e);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (e.<span style=color:#a6e22e>getCause</span>() <span style=color:#66d9ef>instanceof</span> InterruptedException) {
+</span></span><span style=display:flex><span>            e.<span style=color:#a6e22e>getCause</span>().<span style=color:#a6e22e>printStackTrace</span>(listener.<span style=color:#a6e22e>getLogger</span>());
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> InterruptedException(e.<span style=color:#a6e22e>getCause</span>().<span style=color:#a6e22e>getMessage</span>());
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (e.<span style=color:#a6e22e>getCause</span>() <span style=color:#66d9ef>instanceof</span> RuntimeException) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> RuntimeException(e.<span style=color:#a6e22e>getCause</span>());
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// How on earth do we get this far down the branch</span>
+</span></span><span style=display:flex><span>        e.<span style=color:#a6e22e>printStackTrace</span>(listener.<span style=color:#a6e22e>getLogger</span>());
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> RuntimeException(<span style=color:#e6db74>&#34;Unexpected exception&#34;</span>, e);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>updateBuild</span>(AbstractBuild build) {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// update the actions</span>
+</span></span><span style=display:flex><span>        build.<span style=color:#a6e22e>getActions</span>().<span style=color:#a6e22e>addAll</span>(actions);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// update the result</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (result <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> result.<span style=color:#a6e22e>isWorseThan</span>(build.<span style=color:#a6e22e>getResult</span>())) {
+</span></span><span style=display:flex><span>            build.<span style=color:#a6e22e>setResult</span>(result);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The method is initially called from the master. It takes a <code>Ghostwriter</code>, a build and a build listener. First off it checks if the <code>Ghostwriter</code> wants to execute some tasks on the slave, i.e. if it implements <code>Ghostwriter.SlaveGhostwriter</code>, sending the <code>Ghostwriter</code> over to the slave with a <code>BuildProxy</code> and updating the real build when the <code>BuildProxy</code> is returned. Finally, if the <code>Ghostwriter</code> wants to execute some tasks on the master, i.e. if it implements <code>Ghostwriter.MasterGhostwriter</code> we pass control over to the <code>Ghostwriter</code> again. <em><strong>Note:</strong> slave execution is <strong>pass-by-value</strong>.</em>. Thus, if the <code>Ghostwriter</code> is executed on both the slave and the master, changes made to the <code>Ghostwriter</code> on the slave will not be picked up when executing on the master.</p><p>Now, for the method that will be called from a <code>MavenReporter</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span>...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BuildProxy</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>doPerform</span>(Ghostwriter ghostwriter,
+</span></span><span style=display:flex><span>                                    MavenBuildProxy mavenBuildProxy,
+</span></span><span style=display:flex><span>                                    MavenProject pom,
+</span></span><span style=display:flex><span>                                    <span style=color:#66d9ef>final</span> BuildListener listener)
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throws</span> InterruptedException, IOException {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// first, construct the BuildProxy instance that we will use</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        BuildProxy buildProxy <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BuildProxy(
+</span></span><span style=display:flex><span>                mavenBuildProxy.<span style=color:#a6e22e>getArtifactsDir</span>(),
+</span></span><span style=display:flex><span>                mavenBuildProxy.<span style=color:#a6e22e>getProjectRootDir</span>(),
+</span></span><span style=display:flex><span>                mavenBuildProxy.<span style=color:#a6e22e>getRootDir</span>(),
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>new</span> FilePath(pom.<span style=color:#a6e22e>getBasedir</span>()),
+</span></span><span style=display:flex><span>                mavenBuildProxy.<span style=color:#a6e22e>getTimestamp</span>());
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// do we need to do anything on the slave</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (ghostwriter <span style=color:#66d9ef>instanceof</span> Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>final</span> Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span> slaveGhostwriter <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                (Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span>) ghostwriter;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// terminate the build if necessary</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>slaveGhostwriter.<span style=color:#a6e22e>performFromSlave</span>(buildProxy, listener)) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// finally, on to the master</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> mavenBuildProxy.<span style=color:#a6e22e>execute</span>(
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>new</span> BuildProxyCallableHelper(buildProxy,
+</span></span><span style=display:flex><span>                                             ghostwriter,
+</span></span><span style=display:flex><span>                                             listener));
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>catch</span> (Exception e) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> unwrapException(e, listener);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This method is initially called from the slave. It takes the <code>Ghostwriter</code>, the <code>MavenBuildProxy</code>, the pom and the build listener. We start off by creating the <code>BuildProxy</code> from the <code>MavenBuildProxy</code> and the pom, then we invoke the <code>Ghostwriter</code> if necessary (i.e. if it executes on the slave). Finally, we send the <code>BuildProxy</code> and the <code>Ghostwriter</code> over to the master in order to add any required build actions and, if necessary execute on the master.</p><p>Both of these two static helper methods make use of a <code>Callable</code> that is used by Hudson&rsquo;s remoting support to send tasks between the master and the slave:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.helpers;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.remoting.Callable;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.maven.MavenBuildProxy;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.maven.MavenBuild;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.BuildListener;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.IOException;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BuildProxyCallableHelper</span> <span style=color:#66d9ef>implements</span> Callable<span style=color:#f92672>&lt;</span>BuildProxy, Exception<span style=color:#f92672>&gt;</span>,
+</span></span><span style=display:flex><span>        MavenBuildProxy.<span style=color:#a6e22e>BuildCallable</span><span style=color:#f92672>&lt;</span>Boolean, Exception<span style=color:#f92672>&gt;</span> {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> BuildProxy buildProxy;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Ghostwriter ghostwriter;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> BuildListener listener;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    BuildProxyCallableHelper(BuildProxy buildProxy,
+</span></span><span style=display:flex><span>                             Ghostwriter ghostwriter,
+</span></span><span style=display:flex><span>                             BuildListener listener) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>buildProxy</span> <span style=color:#f92672>=</span> buildProxy;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>ghostwriter</span> <span style=color:#f92672>=</span> ghostwriter;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>listener</span> <span style=color:#f92672>=</span> listener;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Boolean <span style=color:#a6e22e>call</span>(MavenBuild mavenBuild) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        buildProxy.<span style=color:#a6e22e>updateBuild</span>(mavenBuild);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (ghostwriter <span style=color:#66d9ef>instanceof</span> Ghostwriter.<span style=color:#a6e22e>MasterGhostwriter</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>final</span> Ghostwriter.<span style=color:#a6e22e>MasterGhostwriter</span> masterBuildStep <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                    (Ghostwriter.<span style=color:#a6e22e>MasterGhostwriter</span>) ghostwriter;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> masterBuildStep.<span style=color:#a6e22e>performFromMaster</span>(
+</span></span><span style=display:flex><span>                    mavenBuild,
+</span></span><span style=display:flex><span>                    buildProxy.<span style=color:#a6e22e>getExecutionRootDir</span>(),
+</span></span><span style=display:flex><span>                    listener);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> BuildProxy <span style=color:#a6e22e>call</span>() <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (ghostwriter <span style=color:#66d9ef>instanceof</span> Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>final</span> Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span> slaveBuildStep <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                    (Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span>) ghostwriter;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>                buildProxy.<span style=color:#a6e22e>setContinueBuild</span>(
+</span></span><span style=display:flex><span>                        slaveBuildStep.<span style=color:#a6e22e>performFromSlave</span>(buildProxy, listener));
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> buildProxy;
+</span></span><span style=display:flex><span>            } <span style=color:#66d9ef>catch</span> (IOException e) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> Exception(e);
+</span></span><span style=display:flex><span>            } <span style=color:#66d9ef>catch</span> (InterruptedException e) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> Exception(e);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> buildProxy;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Ok, that&rsquo;s enough for now. The full source code (including javadoc comments) for these classes is available in Hudson&rsquo;s CVS server underneath the /hudson/hudson/plugins/javancss/ directory. The next part of this tutorial will demonstrate how to use these methods by introducing an <code>AbstractMavenReporterImpl</code> and an <code>AbstractPublisherImpl</code> from which we can inherit our publisher and maven reporter.</p></article></div></div></div></div></div></div></main></div><script type=application/javascript src=https://stephenc.github.io/js/toc.js></script><link rel=stylesheet href=https://stephenc.github.io/css/toc.css></div><footer style="text-align:center;padding:20px;border-top:1px solid #eee;margin-top:40px"><p style=margin:0;color:#666;font-size:14px>© 2026 Stephen Connolly
+| <a href=# onclick="return resetCookieConsent(),!1" style=color:#666;text-decoration:underline>Cookie Settings</a></p></footer><div id=cookie-consent-banner style="display:none;position:fixed;bottom:0;left:0;right:0;background:#333;color:#fff;padding:15px;text-align:center;z-index:9999;box-shadow:0 -2px 10px rgba(0,0,0,.3)"><div style="max-width:1200px;margin:0 auto"><p style="margin:0 0 10px;font-size:14px">This website uses Google Analytics to help analyze how visitors use this site. By continuing to browse this site, you agree to this use.
+<a href=# style=color:#4caf50;text-decoration:underline onclick="return showCookieDetails(),!1">Learn more</a></p><div><button onclick=acceptCookies() style="background:#4caf50;color:#fff;border:none;padding:8px 16px;margin:0 5px;cursor:pointer;border-radius:4px">Accept</button>
+<button onclick=declineCookies() style="background:#f44336;color:#fff;border:none;padding:8px 16px;margin:0 5px;cursor:pointer;border-radius:4px">Decline</button></div></div></div><div id=cookie-details-modal style=display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000><div style=position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border-radius:8px;max-width:500px;width:90%><h3 style=margin-top:0>Cookie Information</h3><p>This website uses Google Analytics, which uses cookies to collect anonymous information about how visitors use this site. This information is used to improve the website experience.</p><p><strong>What data is collected:</strong></p><ul><li>Pages visited and time spent on pages</li><li>How you arrived at the site</li><li>General location (country/city level)</li><li>Device and browser information</li></ul><p>No personally identifiable information is collected. You can opt out at any time by declining cookies.</p><button onclick=hideCookieDetails() style="background:#2196f3;color:#fff;border:none;padding:8px 16px;cursor:pointer;border-radius:4px">Close</button></div></div><script>function getCookieConsent(){return localStorage.getItem("cookieConsent")}function setCookieConsent(e){localStorage.setItem("cookieConsent",e)}function loadGoogleAnalytics(){var t,e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-CEQZZXVE7Q",document.head.appendChild(e),t=document.createElement("script"),t.innerHTML=`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-CEQZZXVE7Q', {
+        anonymize_ip: true,
+        cookie_flags: 'SameSite=None;Secure'
+      });
+    `,document.head.appendChild(t)}function acceptCookies(){setCookieConsent("accepted"),document.getElementById("cookie-consent-banner").style.display="none",loadGoogleAnalytics()}function declineCookies(){setCookieConsent("declined"),document.getElementById("cookie-consent-banner").style.display="none"}function showCookieDetails(){document.getElementById("cookie-details-modal").style.display="block"}function hideCookieDetails(){document.getElementById("cookie-details-modal").style.display="none"}function resetCookieConsent(){localStorage.removeItem("cookieConsent"),document.getElementById("cookie-consent-banner").style.display="block"}document.addEventListener("DOMContentLoaded",function(){var e=getCookieConsent();e==="accepted"?loadGoogleAnalytics():e==="declined"||(document.getElementById("cookie-consent-banner").style.display="block")})</script></body><script type=application/javascript src=https://stephenc.github.io/js/github-style.js></script><script src=https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js></script><script type=application/javascript src=https://stephenc.github.io/js/search.js></script></html>

@@ -1,0 +1,452 @@
+<!doctype html><html lang=en-gb><head><meta charset=utf-8><meta name=viewport content="width=device-width"><script type=application/javascript src=https://stephenc.github.io/js/theme-mode.js></script><link rel=stylesheet href=https://stephenc.github.io/css/frameworks.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github.min.css><link rel=stylesheet href=https://stephenc.github.io/css/github-style.css><link rel=stylesheet href=https://stephenc.github.io/css/light.css><link rel=stylesheet href=https://stephenc.github.io/css/dark.css><link rel=stylesheet href=https://stephenc.github.io/css/syntax.css><title>Writing a Hudson plugin (Part 6 - Parsing the results) - Stephen's technical blog</title><link rel=icon type=image/x-icon href=https://stephenc.github.io/images/favicon.ico><meta name=theme-color content="#1e2327"><meta name=description content="In some ways parsing the JavaNCSS results is the least interesting part of developing a Hudson plugin, as once I have implemented the parser, it is available for everyone. For that reason I will focus more on:
+best practice techniques for parsing results
+common gotchas
+designing for extension
+Getting started First off, we need to analyse the results file format. In the case of JavaNCSS there are multiple ways that the results file can be generated: from the JavaNCSS program directly, from ANT or from Maven. This leads us onto gotcha #1
+"><meta name=keywords content='blog'><meta name=robots content="noodp"><link rel=canonical href=https://stephenc.github.io/post/2008-04-14-writing-a-hudson-plugin-part-6-parsing-the-results/><meta name=twitter:card content="summary"><meta name=twitter:title content="Writing a Hudson plugin (Part 6 - Parsing the results) - Stephen's technical blog"><meta name=twitter:description content="In some ways parsing the JavaNCSS results is the least interesting part of developing a Hudson plugin, as once I have implemented the parser, it is available for everyone. For that reason I will focus more on:
+best practice techniques for parsing results
+common gotchas
+designing for extension
+Getting started First off, we need to analyse the results file format. In the case of JavaNCSS there are multiple ways that the results file can be generated: from the JavaNCSS program directly, from ANT or from Maven. This leads us onto gotcha #1
+"><meta name=twitter:site content="https://stephenc.github.io/"><meta name=twitter:creator content><meta name=twitter:image content="https://stephenc.github.io/"><meta property="og:type" content="article"><meta property="og:title" content="Writing a Hudson plugin (Part 6 - Parsing the results) - Stephen's technical blog"><meta property="og:description" content="In some ways parsing the JavaNCSS results is the least interesting part of developing a Hudson plugin, as once I have implemented the parser, it is available for everyone. For that reason I will focus more on:
+best practice techniques for parsing results
+common gotchas
+designing for extension
+Getting started First off, we need to analyse the results file format. In the case of JavaNCSS there are multiple ways that the results file can be generated: from the JavaNCSS program directly, from ANT or from Maven. This leads us onto gotcha #1
+"><meta property="og:url" content="https://stephenc.github.io/post/2008-04-14-writing-a-hudson-plugin-part-6-parsing-the-results/"><meta property="og:site_name" content="Writing a Hudson plugin (Part 6 - Parsing the results)"><meta property="og:image" content="https://stephenc.github.io/"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><meta property="article:published_time" content="2008-04-14 00:00:00 +0000 UTC"></head><body><div style=position:relative><header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on"><div class="Header-item mobile-none" style=margin-top:-4px;margin-bottom:-4px><a class=Header-link href=https://stephenc.github.io/><img class=octicon height=32 width=32 src=/images/top-icon.png></a></div><div class="Header-item d-md-none"><button class="Header-link btn-link js-details-target" type=button onclick='document.querySelector("#header-search").style.display=document.querySelector("#header-search").style.display=="none"?"block":"none"'>
+<svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" width="24"><path fill-rule="evenodd" d="M1 2.75A.75.75.0 011.75 2h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 2.75zm0 5A.75.75.0 011.75 7h12.5a.75.75.0 110 1.5H1.75A.75.75.0 011 7.75zM1.75 12a.75.75.0 100 1.5h12.5a.75.75.0 100-1.5H1.75z"/></svg></button></div><div style=display:none id=header-search class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex"><div class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to"><div class=position-relative><form target=_blank id=search-form accept-charset=UTF-8 method=get autocomplete=off><label class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center"><input type=text class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable" name=q placeholder=Search autocomplete=off></label></form></div></div></div><div class="Header-item Header-item--full flex-justify-center d-md-none position-relative"><a class=Header-link href=https://stephenc.github.io/><img class="octicon octicon-mark-github v-align-middle" height=32 width=32 src=/images/top-icon.png></a></div><div class=Header-item style=margin-right:0><a href=javascript:void(0) class="Header-link no-select" onclick=switchTheme()><svg style="fill:var(--color-profile-color-modes-toggle-moon)" class="no-select" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.52208 7.71754c3.05612.0 5.53362-2.47748 5.53362-5.5336C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961 9.95801 1.07727 10.3495.771159 10.6474.99992c1.4679 1.12724 2.4141 2.90007 2.4141 4.89391.0 3.40575-2.7609 6.16667-6.16665 6.16667-2.94151.0-5.40199-2.0595-6.018122-4.81523C.794841 6.87902 1.23668 6.65289 1.55321 6.85451 2.41106 7.40095 3.4296 7.71754 4.52208 7.71754z"/></svg></a></div></header></div><div id=search-result class="container-lg px-3 new-discussion-timeline" style=display:none></div><div class=application-main><div><main><div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4"><div class=px-0><div class="mb-3 d-flex px-3 px-md-3 px-lg-5"><div class="flex-auto min-width-0 width-fit mr-3"><div class=d-flex><div class="d-none d-md-block"><a class="avatar mr-2 flex-shrink-0" href=https://stephenc.github.io/><img class=avatar-user src=/images/avatar.jpg width=32 height=32></a></div><div class="d-flex flex-column"><h1 class="break-word f3 text-normal mb-md-0 mb-1"><span class=author><a href=https://stephenc.github.io/>Stephen Connolly</a>
+</span><span class=path-divider>/</span>
+<strong class="css-truncate css-truncate-target mr-1" style=max-width:410px><a href=https://stephenc.github.io/post/2008-04-14-writing-a-hudson-plugin-part-6-parsing-the-results/>Writing a Hudson plugin (Part 6 - Parsing the results)</a></strong></h1><div class="note m-0">Created <relative-time datetime="Mon, 14 Apr 2008 00:00:00 +0000" class=no-wrap>Mon, 14 Apr 2008 00:00:00 +0000</relative-time>
+<span class=file-info-divider></span>
+Modified <relative-time datetime="Mon, 14 Apr 2008 00:00:00 +0000" class=no-wrap>Mon, 14 Apr 2008 00:00:00 +0000</relative-time></div></div></div></div></div></div></div><div class="container-lg px-3 new-discussion-timeline"><div class="repository-content gist-content"><div><div class="js-gist-file-update-container js-task-list-container file-box"><div id=file-pytest class="file my-2"><div id=post-header class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style=z-index:2><div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto"><div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0"><summary id=toc-toggle onclick=clickToc() class="btn btn-octicon m-0 mr-2 p-2"><svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered"><path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zm0 5a.75.75.0 000 1.5h8.5a.75.75.0 000-1.5h-8.5zM3 8A1 1 0 111 8a1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"/></svg></summary><details-menu class=SelectMenu id=toc-details style="display: none;"><div class="SelectMenu-modal rounded-3 mt-1" style=max-height:340px><div class="SelectMenu-list SelectMenu-list--borderless p-2" style=overscroll-behavior:contain id=toc-list></div></div></details-menu>2593 Words</div><div class="file-actions flex-order-2 pt-0"><a class="muted-link mr-3" href=/tags/jenkins><svg class="octicon octicon-tag" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M2.5 7.775V2.75a.25.25.0 01.25-.25h5.025a.25.25.0 01.177.073l6.25 6.25a.25.25.0 010 .354l-5.025 5.025a.25.25.0 01-.354.0l-6.25-6.25A.25.25.0 012.5 7.775zm-1.5.0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464.0.91.184 1.238.513l6.25 6.25a1.75 1.75.0 010 2.474l-5.026 5.026a1.75 1.75.0 01-2.474.0l-6.25-6.25A1.75 1.75.0 011 7.775zM6 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
+Jenkins</a></div></div></div><div class="Box-body px-5 pb-5" style=z-index:1><article class="markdown-body entry-content container-lg"><p>In some ways parsing the JavaNCSS results is the least interesting part of developing a Hudson plugin, as once I have implemented the parser, it is available for everyone. For that reason I will focus more on:</p><ul><li><p>best practice techniques for parsing results</p></li><li><p>common gotchas</p></li><li><p>designing for extension</p></li></ul><h2 id=getting-started>Getting started</h2><p>First off, we need to analyse the results file format. In the case of JavaNCSS there are multiple ways that the results file can be generated: from the JavaNCSS program directly, from ANT or from Maven. This leads us onto gotcha #1</p><blockquote><p><strong><em>Gotcha #1:</em><br>Never assume that a build tool generates the same format of output when run from the command line, ANT or Maven.</strong></p><p>A case in point for Gotcha #1 is <a href=http://findbugs.sourceforge.net/>Findbugs</a> which generates one XML format from the command line and ANT, and generates a different format that appears similar at first glance when run from Maven (<a href=http://www.nabble.com/Findbugs-maven-plugin-td12062101.html#a12069489>mail thread</a>). In this case it turns out that Maven 1 used the different format output, and it is feared that some people came to depend on this Maven 1 format, so when the plugin for Maven 2 was developed, they kept the Maven 1 format. In any case, the moral is don’t assume, check!</p></blockquote><p>So we use the sample projects from Part 1 and generate an ANT and a Maven 2 XML report. First off, here is the report from ANT:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;?xml version=&#34;1.0&#34;?&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;javancss&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;date&gt;</span>2008-04-12<span style=color:#f92672>&lt;/date&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;time&gt;</span>11:22:30<span style=color:#f92672>&lt;/time&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;packages&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;package&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;name&gt;</span>com.onedash.common<span style=color:#f92672>&lt;/name&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>1<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>3<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>10<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>3<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadoc_lines&gt;</span>12<span style=color:#f92672>&lt;/javadoc_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;single_comment_lines&gt;</span>0<span style=color:#f92672>&lt;/single_comment_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;multi_comment_lines&gt;</span>0<span style=color:#f92672>&lt;/multi_comment_lines&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/package&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;package&gt;</span>
+</span></span><span style=display:flex><span>    ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/package&gt;</span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;total&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>5<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>8<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>46<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>9<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadoc_lines&gt;</span>37<span style=color:#f92672>&lt;/javadoc_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;single_comment_lines&gt;</span>0<span style=color:#f92672>&lt;/single_comment_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;multi_comment_lines&gt;</span>0<span style=color:#f92672>&lt;/multi_comment_lines&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/total&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;table&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;</span>Packages<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Classes<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Functions<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>NCSS<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Javadocs<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>per<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;</span>4.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>5.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>8.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>46.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>9.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Project<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;</span>1.25<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>2.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>11.50<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>2.25<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Package<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;</span>1.60<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>9.20<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>1.80<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Class<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;</span>5.75<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>1.13<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Function<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/table&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/packages&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;objects&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;object&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;name&gt;</span>com.onedash.common.Factory<span style=color:#f92672>&lt;/name&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>7<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>3<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>0<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>3<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/object&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;object&gt;</span>
+</span></span><span style=display:flex><span>   ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/object&gt;</span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;averages&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>6.60<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>1.60<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>0.00<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>1.80<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/averages&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;ncss&gt;</span>46.00<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/objects&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;functions&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;function&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;name&gt;</span>com.onedash.common.Factory.Factory()<span style=color:#f92672>&lt;/name&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>1<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ccn&gt;</span>1<span style=color:#f92672>&lt;/ccn&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>1<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/function&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;function&gt;</span>
+</span></span><span style=display:flex><span>   ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/function&gt;</span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;ncss&gt;</span>46.00<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/javancss&gt;</span>
+</span></span></code></pre></div><p>OK, first off, for those following the tutorial exactly, I have cheated a little. I added some more source files into the project to make sure that I have multiple classes is different packages. You can see the source code I built from <a href=https://hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/javancss/work/jobs/simple-ant/workspace>here</a>. Additionally, I have trimmed the output somewhat to highlight the interesting bits, removing the duplicate entries.</p><p>From this report file we can see a basic XML structure:</p><ul><li><p>The root element is <code>&lt;javancss></code> and has child elements: <code>&lt;date></code>, <code>&lt;time></code>, <code>&lt;packages></code>, <code>&lt;objects></code>, and <code>&lt;functions></code></p></li><li><p>The <code>&lt;date></code> and <code>&lt;time></code> elements are the timestamp when the report was generated with the date in <code>YYYY-MM-DD</code> format and the time in <code>HH:MM:SS</code> format</p></li><li><p>The <code>&lt;packages></code> element has child elements: <code>&lt;package></code>, <code>&lt;total></code>, and <code>&lt;table></code>. There are multiple <code>&lt;package></code> elements, but only one <code>&lt;total></code> and <code>&lt;table></code> element.</p></li><li><p>The <code>&lt;package></code> elements have child elements: <code>&lt;name></code>, <code>&lt;classes></code>, <code>&lt;functions></code>, <code>&lt;ncss></code>, <code>&lt;javadocs></code>, <code>&lt;javadoc_lines></code>, <code>&lt;single_comment_lines></code> and <code>&lt;multi_comment_lines></code>. The <code>&lt;name></code> element contains the name of the package as a <code>String</code> and the other elements contain totals as <code>Integer</code>s.</p></li><li><p>The <code>&lt;total></code> element has child elements: <code>&lt;classes></code>, <code>&lt;functions></code>, <code>&lt;ncss></code>, <code>&lt;javadocs></code>, <code>&lt;javadoc_lines></code>, <code>&lt;single_comment_lines></code> and <code>&lt;multi_comment_lines></code>. These elements are the sum of all the corresponding <code>&lt;package></code> children inside the <code>&lt;packages></code> parent</p></li><li><p>The <code>&lt;table></code> element seems to be a HTML table.</p></li><li><p>The <code>&lt;objects></code> element has child elements: <code>&lt;object></code>, <code>&lt;averages></code> and <code>&lt;ncss></code>. There are multiple <code>&lt;object></code> elements, the <code>&lt;averages></code> element contains the average results for all the <code>&lt;object></code> elements and the <code>&lt;ncss></code> element providing some form of total or average.</p></li><li><p>The <code>&lt;functions></code> element has child elements: <code>&lt;function></code> and <code>&lt;ncss></code>. Again there are multiple <code>&lt;function></code> elements with the <code>&lt;ncss></code> element providing some form of total or average (interestingly the result appears to be the same as from <code>&lt;objects></code>).</p></li></ul><p>Now, let’s take a look at what Maven 2 gives us:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;?xml version=&#34;1.0&#34;?&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;?xml version=&#34;1.0&#34;?&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;javancss&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;date&gt;</span>2008-04-12<span style=color:#f92672>&lt;/date&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;time&gt;</span>11:43:06<span style=color:#f92672>&lt;/time&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;packages&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;package&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;name&gt;</span>com.onedash.common<span style=color:#f92672>&lt;/name&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>1<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>3<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>10<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>3<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadoc_lines&gt;</span>12<span style=color:#f92672>&lt;/javadoc_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;single_comment_lines&gt;</span>0<span style=color:#f92672>&lt;/single_comment_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;multi_comment_lines&gt;</span>0<span style=color:#f92672>&lt;/multi_comment_lines&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/package&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;package&gt;</span>
+</span></span><span style=display:flex><span>   ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/package&gt;</span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;total&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>5<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>8<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>46<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>10<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadoc_lines&gt;</span>42<span style=color:#f92672>&lt;/javadoc_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;single_comment_lines&gt;</span>3<span style=color:#f92672>&lt;/single_comment_lines&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;multi_comment_lines&gt;</span>3<span style=color:#f92672>&lt;/multi_comment_lines&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/total&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;table&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;</span>Packages<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Classes<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Functions<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>NCSS<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Javadocs<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>per<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;</span>4.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>5.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>8.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>46.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>10.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Project<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;</span>1.25<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>2.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>11.50<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>2.50<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Package<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;</span>1.60<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>9.20<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>2.00<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Class<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;</span>5.75<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>1.25<span style=color:#f92672>&lt;/td&gt;&lt;td&gt;</span>Function<span style=color:#f92672>&lt;/td&gt;&lt;/tr&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/table&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/packages&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;objects&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;object&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;name&gt;</span>com.onedash.common.api.Namer<span style=color:#f92672>&lt;/name&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>2<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>1<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>0<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>1<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/object&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;object&gt;</span>
+</span></span><span style=display:flex><span>   ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/object&gt;</span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;averages&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>6.60<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;functions&gt;</span>1.60<span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;classes&gt;</span>0.00<span style=color:#f92672>&lt;/classes&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>2.00<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/averages&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;ncss&gt;</span>46.00<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/objects&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;functions&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;function&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;name&gt;</span>com.onedash.common.api.Namer.newName()<span style=color:#f92672>&lt;/name&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ncss&gt;</span>1<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;ccn&gt;</span>1<span style=color:#f92672>&lt;/ccn&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;javadocs&gt;</span>0<span style=color:#f92672>&lt;/javadocs&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/function&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;function&gt;</span>
+</span></span><span style=display:flex><span>   ...
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;/function&gt;</span>
+</span></span><span style=display:flex><span> <span style=color:#f92672>&lt;ncss&gt;</span>46.00<span style=color:#f92672>&lt;/ncss&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/functions&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/javancss&gt;</span>
+</span></span></code></pre></div><p>Thankfully, this is the same format as for ANT. You will also be relieved to know that this is the format generated by the JavaNCSS program directly. Thus we only have to write one parser, and we do not have to detect what format we are parsing. But before I forget:</p><blockquote><p><strong><em>Best Practice #1:</em><br>When there are multiple formats of a report generated by different tools, make sure that your Hudson plugin can detect the different formats and can handle them appropriately (by either delegating to a different parser implementation, or by handling the differences on the fly).</strong></p><p>One of the goals of Hudson is to minimise configuration. So when a plugin can detect an configuration option automatically, it should detect it automatically (possibly providing an “Advanced” option button to let users override the detection if Hudson gets it wrong)</p></blockquote><h2 id=start-small>Start small</h2><p>Looking at the JavaNCSS output, I see that there is a lot of information&mldr; and I only have one more Part left in this series! So I am not going to parse everything. I am sure that in the future I will extend the Hudson plugin to parse all of the file, but for now I am just going to concentrate on the &lt;pacakages> element. This gives users something useful and it’s better than nothing.</p><p>But what happens when I do get around to parsing the <code>&lt;objects></code> and <code>&lt;functions></code> elements? People may have lots of old builds and they will want to see the trends of the <code>&lt;objects></code> and <code>&lt;functions></code> results. I have two choices:</p><ul><li><p>Tell them “Sorry, out of luck”</p></li><li><p>Save the results with the build, and then the newer parser can extract the results when people want the trend.</p></li></ul><p>Choosing between these two options can be difficult. My preference is to go with option two, as long as the results are not a really big file.</p><blockquote><p><strong><em>Best Practice #2:</em><br>If you are not parsing everything in the results file, and the results file is not too big, and it can be parsed without reference to the source code, copy the results file to Hudson so that future versions of your plugin can read the information you are not currently parsing.</strong></p></blockquote><h2 id=dont-over-parse>Don’t over parse</h2><p>The results that we parse are going to be placed into an <code>Action</code> object. This <code>Action</code> object will be serialized. When Hudson starts up, it reads all the results of all the builds. If we place too much information in our <code>Action</code> object, this can have a detrimental effect on Hudson’s performance. When users have 50+ projects each with a couple of hundred builds, they will thank you for keeping your <code>Action</code> objects small.</p><blockquote><p><strong><em>Gotcha #2:</em><br>Don’t store too much in your Action objects.</strong></p></blockquote><h2 id=dont-under-parse>Don’t under parse</h2><p>OK, so I have just given out about storing too much in your Action objects. There is a second problem&mldr; not storing enough! Most reporting plugins try to present a trend graph to show progress over a number of builds. If we don’t store the information required to generate this trend graph inside our Action objects, then displaying the trend graph will require parsing all the result files for all builds of a project. This can have a detrimental effect on Hudson’s performance. When users have projects with a couple of hundred builds, they will thank you for keeping the information to generate the main trend graph inside your Action objects.</p><blockquote><p><strong><em>Gotcha #3:</em><br>Store the information for generating the Project level trend graph in your Action objects.</strong></p><p>A case in point for Gotach #3 is the cobertura plugin, which at the time of writing, does not store the information for the main trend graph in the Action object. I fully intend to fix this situation once I have finished this series!</p></blockquote><h2 id=how-to-parse>How to parse</h2><p>Most of the result files that you will encounter are XML based. We are writing our plugins in Java, so that gives us a range of parsers to choose from, e.g.</p><ul><li><p>SAX</p></li><li><p>DOM</p></li><li><p>StAX</p></li><li><p>Roll your own</p></li><li><p><em>Etc.</em></p></li></ul><p>Given that report files can end up very big for very big projects, we need to be careful how we parse the results:</p><blockquote><p><strong><em>Gotcha #4:</em><br>Don’t parse XML results using DOM, as this will require reading the entire report file into memory.</strong></p></blockquote><p>I am going to stick my neck out and make a recommendation:</p><blockquote><p><strong><em>Best Practice #3:</em><br>Use an XML pull parser to parse XML report files.</strong></p><p>They are generally faster, use less memory, and are better suited to a “hit-and-run” style of result extraction.</p></blockquote><h2 id=be-able-to-aggregate-parsing-results>Be able to aggregate parsing results</h2><p>You may think that there will only ever be one result file that you need to parse. Maven 2 usually throws a spanner into that model, and everyone has their own ANT build script, so:</p><blockquote><p><strong><em>Gotcha #5:</em><br>Don’t assume you only have to parse one report file for each project.</strong></p><p>This gotcha arrives from the code coverage plugins (emma, clover, cobertura). Initially, you would think that people are only interested in one code coverage result, i.e. the coverage for the project&mldr; so they will only have one result file that we need to parse, right? Wrong! Some tools/build scripts generate a report for each module but only generate a summary report in non-conforming HTML. Some tools / build scripts generate a report for unit tests and integration tests separately. It’s a mess, and don’t get me started on using different tools for different test types&mldr;</p></blockquote><h2 id=the-parsing-engine>The parsing engine</h2><p>Ok, so here is the parsing engine:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.javancss.parser;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.AbstractBuild;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.util.IOException2;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> org.xmlpull.v1.XmlPullParser;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> org.xmlpull.v1.XmlPullParserException;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> org.xmlpull.v1.XmlPullParserFactory;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.*;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.*;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Statistic</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> AbstractBuild<span style=color:#f92672>&lt;?</span>, <span style=color:#f92672>?&gt;</span> owner;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> String name;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> classes;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> functions;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> ncss;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> javadocs;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> javadocLines;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> singleCommentLines;
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>long</span> multiCommentLines;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>parse</span>(File inFile)
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throws</span> IOException, XmlPullParserException {
+</span></span><span style=display:flex><span>     Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> results <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span>();
+</span></span><span style=display:flex><span>     FileInputStream fis <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>     BufferedInputStream bis <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>         fis <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> FileInputStream(inFile);
+</span></span><span style=display:flex><span>         bis <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BufferedInputStream(fis);
+</span></span><span style=display:flex><span>         XmlPullParserFactory factory <span style=color:#f92672>=</span> XmlPullParserFactory.<span style=color:#a6e22e>newInstance</span>();
+</span></span><span style=display:flex><span>         factory.<span style=color:#a6e22e>setNamespaceAware</span>(<span style=color:#66d9ef>true</span>);
+</span></span><span style=display:flex><span>         factory.<span style=color:#a6e22e>setValidating</span>(<span style=color:#66d9ef>false</span>);
+</span></span><span style=display:flex><span>         XmlPullParser parser <span style=color:#f92672>=</span> factory.<span style=color:#a6e22e>newPullParser</span>();
+</span></span><span style=display:flex><span>         parser.<span style=color:#a6e22e>setInput</span>(bis, <span style=color:#66d9ef>null</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>         <span style=color:#75715e>// check that the first tag is &lt;javancss&gt;</span>
+</span></span><span style=display:flex><span>         expectNextTag(parser, <span style=color:#e6db74>&#34;javancss&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>         <span style=color:#75715e>// skip until we get to the &lt;packages&gt; tag</span>
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>while</span> (parser.<span style=color:#a6e22e>getDepth</span>() <span style=color:#f92672>&gt;</span> 0
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&amp;&amp;</span> (parser.<span style=color:#a6e22e>getEventType</span>() <span style=color:#f92672>!=</span> XmlPullParser.<span style=color:#a6e22e>START_TAG</span>
+</span></span><span style=display:flex><span>                    <span style=color:#f92672>||</span> <span style=color:#f92672>!</span><span style=color:#e6db74>&#34;packages&#34;</span>.<span style=color:#a6e22e>equals</span>(parser.<span style=color:#a6e22e>getName</span>()))) {
+</span></span><span style=display:flex><span>             parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>while</span> (parser.<span style=color:#a6e22e>getDepth</span>() <span style=color:#f92672>&gt;</span> 0
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&amp;&amp;</span> (parser.<span style=color:#a6e22e>getEventType</span>() <span style=color:#f92672>!=</span> XmlPullParser.<span style=color:#a6e22e>START_TAG</span>
+</span></span><span style=display:flex><span>                    <span style=color:#f92672>||</span> <span style=color:#f92672>!</span><span style=color:#e6db74>&#34;package&#34;</span>.<span style=color:#a6e22e>equals</span>(parser.<span style=color:#a6e22e>getName</span>()))) {
+</span></span><span style=display:flex><span>             parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>while</span> (parser.<span style=color:#a6e22e>getDepth</span>() <span style=color:#f92672>&gt;=</span> 2
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&amp;&amp;</span> parser.<span style=color:#a6e22e>getEventType</span>() <span style=color:#f92672>==</span> XmlPullParser.<span style=color:#a6e22e>START_TAG</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&amp;&amp;</span> <span style=color:#e6db74>&#34;package&#34;</span>.<span style=color:#a6e22e>equals</span>(parser.<span style=color:#a6e22e>getName</span>())) {
+</span></span><span style=display:flex><span>             Map<span style=color:#f92672>&lt;</span>String, String<span style=color:#f92672>&gt;</span> data <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;</span>String, String<span style=color:#f92672>&gt;</span>();
+</span></span><span style=display:flex><span>             String lastTag <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>             String lastText <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>int</span> depth <span style=color:#f92672>=</span> parser.<span style=color:#a6e22e>getDepth</span>();
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>while</span> (parser.<span style=color:#a6e22e>getDepth</span>() <span style=color:#f92672>&gt;=</span> depth) {
+</span></span><span style=display:flex><span>                 parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>                 <span style=color:#66d9ef>switch</span> (parser.<span style=color:#a6e22e>getEventType</span>()) {
+</span></span><span style=display:flex><span>                     <span style=color:#66d9ef>case</span> XmlPullParser.<span style=color:#a6e22e>START_TAG</span>:
+</span></span><span style=display:flex><span>                         lastTag <span style=color:#f92672>=</span> parser.<span style=color:#a6e22e>getName</span>();
+</span></span><span style=display:flex><span>                         <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>                     <span style=color:#66d9ef>case</span> XmlPullParser.<span style=color:#a6e22e>TEXT</span>:
+</span></span><span style=display:flex><span>                         lastText <span style=color:#f92672>=</span> parser.<span style=color:#a6e22e>getText</span>();
+</span></span><span style=display:flex><span>                         <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>                     <span style=color:#66d9ef>case</span> XmlPullParser.<span style=color:#a6e22e>END_TAG</span>:
+</span></span><span style=display:flex><span>                         <span style=color:#66d9ef>if</span> (parser.<span style=color:#a6e22e>getDepth</span>() <span style=color:#f92672>==</span> 4
+</span></span><span style=display:flex><span>                             <span style=color:#f92672>&amp;&amp;</span> lastTag <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>
+</span></span><span style=display:flex><span>                             <span style=color:#f92672>&amp;&amp;</span> lastText <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>                             data.<span style=color:#a6e22e>put</span>(lastTag, lastText);
+</span></span><span style=display:flex><span>                         }
+</span></span><span style=display:flex><span>                         lastTag <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>                         lastText <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>                         <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>                 }
+</span></span><span style=display:flex><span>             }
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>if</span> (data.<span style=color:#a6e22e>containsKey</span>(<span style=color:#e6db74>&#34;name&#34;</span>)) {
+</span></span><span style=display:flex><span>                 Statistic s <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Statistic(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;name&#34;</span>));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setClasses</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;classes&#34;</span>)));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setFunctions</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;functions&#34;</span>)));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setNcss</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;ncss&#34;</span>)));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setJavadocs</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;javadocs&#34;</span>)));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setJavadocLines</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;javadoc_lines&#34;</span>)));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setSingleCommentLines</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;single_comment_lines&#34;</span>)));
+</span></span><span style=display:flex><span>                 s.<span style=color:#a6e22e>setMultiCommentLines</span>(Long.<span style=color:#a6e22e>valueOf</span>(data.<span style=color:#a6e22e>get</span>(<span style=color:#e6db74>&#34;multi_comment_lines&#34;</span>)));
+</span></span><span style=display:flex><span>                 results.<span style=color:#a6e22e>add</span>(s);
+</span></span><span style=display:flex><span>             }
+</span></span><span style=display:flex><span>             parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>     } <span style=color:#66d9ef>catch</span> (XmlPullParserException e) {
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IOException2(e);
+</span></span><span style=display:flex><span>     } <span style=color:#66d9ef>finally</span> {
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>if</span> (bis <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>             bis.<span style=color:#a6e22e>close</span>();
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>if</span> (fis <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>             fis.<span style=color:#a6e22e>close</span>();
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>     }
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>return</span> results;
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>skipTag</span>(XmlPullParser parser)
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throws</span> IOException, XmlPullParserException {
+</span></span><span style=display:flex><span>     parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>     endElement(parser);
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>expectNextTag</span>(XmlPullParser parser, String tag)
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throws</span> IOException, XmlPullParserException {
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>while</span> (<span style=color:#66d9ef>true</span>) {
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>if</span> (parser.<span style=color:#a6e22e>getEventType</span>() <span style=color:#f92672>!=</span> XmlPullParser.<span style=color:#a6e22e>START_TAG</span>) {
+</span></span><span style=display:flex><span>             parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>if</span> (parser.<span style=color:#a6e22e>getName</span>().<span style=color:#a6e22e>equals</span>(tag)) {
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>return</span>;
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IOException(<span style=color:#e6db74>&#34;Expecting tag &#34;</span> <span style=color:#f92672>+</span> tag);
+</span></span><span style=display:flex><span>     }
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>endElement</span>(XmlPullParser parser)
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throws</span> IOException, XmlPullParserException {
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>int</span> depth <span style=color:#f92672>=</span> parser.<span style=color:#a6e22e>getDepth</span>();
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>while</span> (parser.<span style=color:#a6e22e>getDepth</span>() <span style=color:#f92672>&gt;=</span> depth) {
+</span></span><span style=display:flex><span>         parser.<span style=color:#a6e22e>next</span>();
+</span></span><span style=display:flex><span>     }
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>Statistic</span>(String name) {
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>name</span> <span style=color:#f92672>=</span> name;
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#75715e>// Simple getters and setters for all the private fields</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#75715e>// equals based on all private fields, hashCode based on</span>
+</span></span><span style=display:flex><span> <span style=color:#75715e>// name and owner.</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#75715e>// toString</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Essentially the main work is done in the static parse method. It takes a File and tries to parse it. We get an XML Pull Parser for the stream and ensure that it is neither namespace aware nor validating as the file format does not use namespaces and we will be forgiving on the XML format.</p><p>The first tag should be <code>&lt;javancss></code> and after that we skip until we get a <code>&lt;pacakages></code> tag. Once we have found the <code>&lt;packages></code> tag we skip until we hit the first <code>&lt;package></code> tag.</p><p>We are reverse engineering the JavaNCSS file format, so we will not make any assumptions about the order of the child elements in the <code>&lt;package></code> element. We put all the child elements into a <code>Map</code> keyed by the element name, and then when we reach the end of the <code>&lt;package></code> element we pull out the information we were after from the <code>Map</code> and put it into a <code>Statistic</code> object and add that to the collection of results that we will return.</p><p>As soon as we hit the end of the <code>&lt;packages></code> element, we stop parsing.</p><h2 id=supporting-aggregation>Supporting aggregation</h2><p>In order to support aggregation of multiple results, we&rsquo;ll add some utility methods to the <code>Statistic</code> class, first we need methods that allow us to calculate totals:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.javancss.parser;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Statistic</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> Statistic <span style=color:#a6e22e>total</span>(Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span>... results) {
+</span></span><span style=display:flex><span>     Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> merged <span style=color:#f92672>=</span> merge(results);
+</span></span><span style=display:flex><span>     Statistic total <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Statistic(<span style=color:#e6db74>&#34;&#34;</span>);
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>for</span> (Statistic individual : merged) {
+</span></span><span style=display:flex><span>         total.<span style=color:#a6e22e>add</span>(individual);
+</span></span><span style=display:flex><span>     }
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>return</span> total;
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>add</span>(Statistic r) {
+</span></span><span style=display:flex><span>     classes <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>classes</span>;
+</span></span><span style=display:flex><span>     functions <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>functions</span>;
+</span></span><span style=display:flex><span>     ncss <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>ncss</span>;
+</span></span><span style=display:flex><span>     javadocs <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>javadocs</span>;
+</span></span><span style=display:flex><span>     javadocLines <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>javadocLines</span>;
+</span></span><span style=display:flex><span>     singleCommentLines <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>singleCommentLines</span>;
+</span></span><span style=display:flex><span>     multiCommentLines <span style=color:#f92672>+=</span> r.<span style=color:#a6e22e>multiCommentLines</span>;
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The <code>total</code> method just calculates the total of all the statistics in a collection of statistics. We will also need to be able to merge different result sets. This should aggregate totals for each package separately and return a collection with one total statistic for each package:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.javancss.parser;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Statistic</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>merge</span>(
+</span></span><span style=display:flex><span>         Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span>... results) {
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>if</span> (results.<span style=color:#a6e22e>length</span> <span style=color:#f92672>==</span> 0) {
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>return</span> Collections.<span style=color:#a6e22e>emptySet</span>();
+</span></span><span style=display:flex><span>     } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (results.<span style=color:#a6e22e>length</span> <span style=color:#f92672>==</span> 1) {
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>return</span> results<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>     } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>         Map<span style=color:#f92672>&lt;</span>String, Statistic<span style=color:#f92672>&gt;</span> merged <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                 <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;</span>String, Statistic<span style=color:#f92672>&gt;</span>();
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>for</span> (Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> result : results) {
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>for</span> (Statistic individual : result) {
+</span></span><span style=display:flex><span>                 <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>merged.<span style=color:#a6e22e>containsKey</span>(individual.<span style=color:#a6e22e>name</span>)) {
+</span></span><span style=display:flex><span>                     merged.<span style=color:#a6e22e>put</span>(individual.<span style=color:#a6e22e>name</span>,
+</span></span><span style=display:flex><span>                             <span style=color:#66d9ef>new</span> Statistic(individual.<span style=color:#a6e22e>name</span>));
+</span></span><span style=display:flex><span>                 }
+</span></span><span style=display:flex><span>                 merged.<span style=color:#a6e22e>get</span>(individual.<span style=color:#a6e22e>name</span>).<span style=color:#a6e22e>add</span>(individual);
+</span></span><span style=display:flex><span>             }
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>return</span> merged.<span style=color:#a6e22e>values</span>();
+</span></span><span style=display:flex><span>     }
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>That is pretty much it for the parser engine.</p><h2 id=the-ghostwriter>The Ghostwriter</h2><p>Now we need to hook the engine into our publisher. We will need to configure the UI elements and the <code>Action</code>s&mldr; all tasks for the final part, but for now, we&rsquo;ll just hook it up. We want to run the parsing on the slave side so we implement <code>Ghostwriter.SlaveGhostwriter</code>.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#f92672>package</span> hudson.plugins.javancss;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.FilePath;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.AbstractBuild;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.model.BuildListener;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.plugins.helpers.BuildProxy;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.plugins.helpers.Ghostwriter;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> hudson.plugins.javancss.parser.Statistic;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> org.xmlpull.v1.XmlPullParserException;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.File;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.io.IOException;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.Collection;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.HashSet;
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> java.util.Set;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JavaNCSSGhostwriter</span>
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>implements</span> Ghostwriter,
+</span></span><span style=display:flex><span>     Ghostwriter.<span style=color:#a6e22e>SlaveGhostwriter</span> {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> String reportFilenamePattern;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>JavaNCSSGhostwriter</span>(String reportFilenamePattern) {
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>reportFilenamePattern</span> <span style=color:#f92672>=</span> reportFilenamePattern;
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>performFromSlave</span>(
+</span></span><span style=display:flex><span>         BuildProxy build,
+</span></span><span style=display:flex><span>         BuildListener listener)
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>throws</span> InterruptedException, IOException {
+</span></span><span style=display:flex><span>     FilePath<span style=color:#f92672>[]</span> paths <span style=color:#f92672>=</span> build.<span style=color:#a6e22e>getExecutionRootDir</span>()
+</span></span><span style=display:flex><span>             .<span style=color:#a6e22e>list</span>(reportFilenamePattern);
+</span></span><span style=display:flex><span>     Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> results <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>     Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> parsedFiles <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashSet<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span>();
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>for</span> (FilePath path : paths) {
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>final</span> String pathStr <span style=color:#f92672>=</span> path.<span style=color:#a6e22e>getRemote</span>();
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>parsedFiles.<span style=color:#a6e22e>contains</span>(pathStr)) {
+</span></span><span style=display:flex><span>             parsedFiles.<span style=color:#a6e22e>add</span>(pathStr);
+</span></span><span style=display:flex><span>             <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>                 Collection<span style=color:#f92672>&lt;</span>Statistic<span style=color:#f92672>&gt;</span> result <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                         Statistic.<span style=color:#a6e22e>parse</span>(<span style=color:#66d9ef>new</span> File(pathStr));
+</span></span><span style=display:flex><span>                 <span style=color:#66d9ef>if</span> (results <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>                     results <span style=color:#f92672>=</span> result;
+</span></span><span style=display:flex><span>                 } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>                     results <span style=color:#f92672>=</span> Statistic.<span style=color:#a6e22e>merge</span>(results, result);
+</span></span><span style=display:flex><span>                 }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                 <span style=color:#75715e>// TODO copy the parsed file to the master</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>             } <span style=color:#66d9ef>catch</span> (XmlPullParserException e) {
+</span></span><span style=display:flex><span>                 e.<span style=color:#a6e22e>printStackTrace</span>(listener.<span style=color:#a6e22e>getLogger</span>());
+</span></span><span style=display:flex><span>             }
+</span></span><span style=display:flex><span>         }
+</span></span><span style=display:flex><span>     }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>     <span style=color:#75715e>// TODO add the results into an Action an attach it to the</span>
+</span></span><span style=display:flex><span>     <span style=color:#75715e>// build.</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>     <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Basically, we search the supplied wildcard-path for report files and merge all the results together into a collection of results. In the final part of this series we will create our Action to hold the results and wire everything together.</p></article></div></div></div></div></div></div></main></div><script type=application/javascript src=https://stephenc.github.io/js/toc.js></script><link rel=stylesheet href=https://stephenc.github.io/css/toc.css></div><footer style="text-align:center;padding:20px;border-top:1px solid #eee;margin-top:40px"><p style=margin:0;color:#666;font-size:14px>© 2026 Stephen Connolly
+| <a href=# onclick="return resetCookieConsent(),!1" style=color:#666;text-decoration:underline>Cookie Settings</a></p></footer><div id=cookie-consent-banner style="display:none;position:fixed;bottom:0;left:0;right:0;background:#333;color:#fff;padding:15px;text-align:center;z-index:9999;box-shadow:0 -2px 10px rgba(0,0,0,.3)"><div style="max-width:1200px;margin:0 auto"><p style="margin:0 0 10px;font-size:14px">This website uses Google Analytics to help analyze how visitors use this site. By continuing to browse this site, you agree to this use.
+<a href=# style=color:#4caf50;text-decoration:underline onclick="return showCookieDetails(),!1">Learn more</a></p><div><button onclick=acceptCookies() style="background:#4caf50;color:#fff;border:none;padding:8px 16px;margin:0 5px;cursor:pointer;border-radius:4px">Accept</button>
+<button onclick=declineCookies() style="background:#f44336;color:#fff;border:none;padding:8px 16px;margin:0 5px;cursor:pointer;border-radius:4px">Decline</button></div></div></div><div id=cookie-details-modal style=display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000><div style=position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border-radius:8px;max-width:500px;width:90%><h3 style=margin-top:0>Cookie Information</h3><p>This website uses Google Analytics, which uses cookies to collect anonymous information about how visitors use this site. This information is used to improve the website experience.</p><p><strong>What data is collected:</strong></p><ul><li>Pages visited and time spent on pages</li><li>How you arrived at the site</li><li>General location (country/city level)</li><li>Device and browser information</li></ul><p>No personally identifiable information is collected. You can opt out at any time by declining cookies.</p><button onclick=hideCookieDetails() style="background:#2196f3;color:#fff;border:none;padding:8px 16px;cursor:pointer;border-radius:4px">Close</button></div></div><script>function getCookieConsent(){return localStorage.getItem("cookieConsent")}function setCookieConsent(e){localStorage.setItem("cookieConsent",e)}function loadGoogleAnalytics(){var t,e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-CEQZZXVE7Q",document.head.appendChild(e),t=document.createElement("script"),t.innerHTML=`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-CEQZZXVE7Q', {
+        anonymize_ip: true,
+        cookie_flags: 'SameSite=None;Secure'
+      });
+    `,document.head.appendChild(t)}function acceptCookies(){setCookieConsent("accepted"),document.getElementById("cookie-consent-banner").style.display="none",loadGoogleAnalytics()}function declineCookies(){setCookieConsent("declined"),document.getElementById("cookie-consent-banner").style.display="none"}function showCookieDetails(){document.getElementById("cookie-details-modal").style.display="block"}function hideCookieDetails(){document.getElementById("cookie-details-modal").style.display="none"}function resetCookieConsent(){localStorage.removeItem("cookieConsent"),document.getElementById("cookie-consent-banner").style.display="block"}document.addEventListener("DOMContentLoaded",function(){var e=getCookieConsent();e==="accepted"?loadGoogleAnalytics():e==="declined"||(document.getElementById("cookie-consent-banner").style.display="block")})</script></body><script type=application/javascript src=https://stephenc.github.io/js/github-style.js></script><script src=https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js></script><script type=application/javascript src=https://stephenc.github.io/js/search.js></script></html>
