@@ -1,5 +1,5 @@
 baseURL = "https://stephenc.github.io/"
-languageCode = "en-gb"
+locale = "en-gb"
 title = "Stephen's technical blog"
 theme = ["hugo-admonitions", "github-style"]
 
