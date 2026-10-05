@@ -1,0 +1,13 @@
+{{- $src := .Get "src" -}}
+<video
+  {{- with .Get "class" }} class="{{ . }}"{{ end }}
+  {{- if eq (.Get "autoplay") "true" }} autoplay muted{{ end }}
+  {{- if eq (.Get "loop") "true" }} loop{{ end }}
+  {{- if ne (.Get "controls") "false" }} controls{{ end }}
+  playsinline
+  preload="metadata"
+  style="display: block; max-width: 100%; height: auto;"
+>
+  <source src="{{ $src | safeURL }}"{{ with .Get "type" }} type="{{ . }}"{{ end }}>
+  Your browser does not support embedded video.
+</video>
